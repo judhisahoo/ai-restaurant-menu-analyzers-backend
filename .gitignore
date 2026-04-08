@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+data/
+uploads/scan_photo/*
+uploads/item_image/*
+!uploads/scan_photo/.gitkeep
+!uploads/item_image/.gitkeep
+*.log
+.env
