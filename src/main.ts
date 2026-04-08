@@ -28,11 +28,11 @@ async function bootstrap() {
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 
-  app.getHttpAdapter().get('/docs-json', (_request: any, response: any) => {
+  app.getHttpAdapter().get('/api/docs-json', (_request: any, response: any) => {
     response.json(swaggerDocument);
   });
 
-  app.getHttpAdapter().get('/docs/swagger-ui-init.js', (_request: any, response: any) => {
+  app.getHttpAdapter().get('/api/docs/swagger-ui-init.js', (_request: any, response: any) => {
     response.type('application/javascript');
     const swaggerInitJs = buildSwaggerInitJS(swaggerDocument, {
       swaggerOptions: {
@@ -53,19 +53,19 @@ async function bootstrap() {
   <div id="swagger-ui"></div>
   <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
   <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
-  <script src="./swagger-ui-init.js"></script>
+  <script src="/api/docs/swagger-ui-init.js"></script>
   <style>
     .swagger-ui .topbar .download-url-wrapper { display: none }
   </style>
 </body>
 </html>`;
 
-  app.getHttpAdapter().get('/docs', (_request: any, response: any) => {
+  app.getHttpAdapter().get('/api/docs', (_request: any, response: any) => {
     response.type('text/html');
     response.send(swaggerHtml);
   });
 
-  app.getHttpAdapter().get('/docs/', (_request: any, response: any) => {
+  app.getHttpAdapter().get('/api/docs/', (_request: any, response: any) => {
     response.type('text/html');
     response.send(swaggerHtml);
   });
