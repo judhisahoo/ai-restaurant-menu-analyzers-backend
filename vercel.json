@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "routes": [
+    {
+      "src": "/api/docs/?$",
+      "dest": "/api/docs"
+    },
+    {
+      "src": "/api/docs/swagger-ui-init.js",
+      "dest": "/api/docs/swagger-ui-init.js"
+    },
+    {
+      "src": "/api/docs-json",
+      "dest": "/api/docs-json"
+    }
+  ]
+}

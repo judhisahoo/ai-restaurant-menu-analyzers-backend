@@ -1,10 +1,9 @@
 import 'dotenv/config';
-import * as express from 'express';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-const swaggerUiDist = require('swagger-ui-dist');
+const { buildSwaggerInitJS } = require('@nestjs/swagger/dist/swagger-ui/swagger-ui');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,15 +28,46 @@ async function bootstrap() {
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 
-  const swaggerAssetsPath = swaggerUiDist.getAbsoluteFSPath();
-  app.use('/api/docs/docs', express.static(swaggerAssetsPath));
-  app.use('/api/docs', express.static(swaggerAssetsPath));
+  app.getHttpAdapter().get('/docs-json', (_request: any, response: any) => {
+    response.json(swaggerDocument);
+  });
 
-  SwaggerModule.setup('docs', app, swaggerDocument, {
-    useGlobalPrefix: true,
-    swaggerOptions: {
-      url: '/api/docs-json',
-    },
+  app.getHttpAdapter().get('/docs/swagger-ui-init.js', (_request: any, response: any) => {
+    response.type('application/javascript');
+    const swaggerInitJs = buildSwaggerInitJS(swaggerDocument, {
+      swaggerOptions: {
+        url: '/api/docs-json',
+      },
+    });
+    response.send(swaggerInitJs);
+  });
+
+  const swaggerHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Restaurant Menu AI Backend</title>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
+  <script src="./swagger-ui-init.js"></script>
+  <style>
+    .swagger-ui .topbar .download-url-wrapper { display: none }
+  </style>
+</body>
+</html>`;
+
+  app.getHttpAdapter().get('/docs', (_request: any, response: any) => {
+    response.type('text/html');
+    response.send(swaggerHtml);
+  });
+
+  app.getHttpAdapter().get('/docs/', (_request: any, response: any) => {
+    response.type('text/html');
+    response.send(swaggerHtml);
   });
 
   const port = Number(process.env.PORT ?? 3000);
