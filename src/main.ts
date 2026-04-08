@@ -1,8 +1,10 @@
 import 'dotenv/config';
+import * as express from 'express';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+const swaggerUiDist = require('swagger-ui-dist');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,9 +28,16 @@ async function bootstrap() {
     .build();
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, swaggerDocument);
-  app.getHttpAdapter().get('/api/docs-json', (_request, response) => {
-    response.json(swaggerDocument);
+
+  const swaggerAssetsPath = swaggerUiDist.getAbsoluteFSPath();
+  app.use('/api/docs/docs', express.static(swaggerAssetsPath));
+  app.use('/api/docs', express.static(swaggerAssetsPath));
+
+  SwaggerModule.setup('docs', app, swaggerDocument, {
+    useGlobalPrefix: true,
+    swaggerOptions: {
+      url: '/api/docs-json',
+    },
   });
 
   const port = Number(process.env.PORT ?? 3000);
