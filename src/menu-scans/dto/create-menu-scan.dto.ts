@@ -11,7 +11,7 @@ export class CreateMenuScanDto {
   @ApiProperty({
     example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ...',
     description:
-      'Can be a filename, a URL, a data URL, or raw base64 image content.',
+      'Can be a filename, a URL, a data URL, or raw base64 image content. Stored uploads are returned as public Vercel Blob URLs.',
   })
   @IsString()
   scan_photo!: string;

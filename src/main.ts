@@ -2,16 +2,9 @@ import 'dotenv/config';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as express from 'express';
 import { AppModule } from './app.module';
-import {
-  ensureApplicationDirectories,
-  resolveUploadRoot,
-} from './common/utils/app-paths.util';
 
 async function bootstrap() {
-  ensureApplicationDirectories();
-
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
@@ -23,7 +16,6 @@ async function bootstrap() {
       },
     }),
   );
-  app.use('/uploads', express.static(resolveUploadRoot()));
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Restaurant Menu AI Backend')

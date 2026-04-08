@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            Int              @id @default(autoincrement())
+  email         String           @unique
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  verifiedAt    DateTime         @map("verified_at") @db.Timestamptz(3)
+  locations     LocationHistory[]
+  menuScans     MenuScan[]
+  userMenuItems UserMenuItem[]
+
+  @@map("user")
+}
+
+model LocationHistory {
+  id         Int      @id @default(autoincrement())
+  userId     Int?     @map("user_id")
+  latitude   Float
+  longitude  Float
+  accuracy   Float?
+  capturedAt DateTime @map("captured_at") @db.Timestamptz(3)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("location_history")
+}
+
+model MenuItem {
+  id                String             @id
+  name              String             @unique
+  shortDescription  String             @map("short_description")
+  image             String?
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  itemComponents    ItemComponent[]
+  ingredientDetails IngredientDetail[]
+  userMenuItems     UserMenuItem[]
+
+  @@map("menu_items")
+}
+
+model UserMenuItem {
+  id        String   @id
+  itemId    String   @map("item_id")
+  userId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  item      MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, userId], map: "idx_user_menu_items_item_user")
+  @@map("user_menu_items")
+}
+
+model MenuScan {
+  id         Int      @id @default(autoincrement())
+  userId     Int?     @map("user_id")
+  scanPhoto  String   @map("scan_photo")
+  capturedAt DateTime @map("captured_at") @db.Timestamptz(3)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("menu_scans")
+}
+
+model ItemComponent {
+  id        String   @id
+  itemId    String   @map("item_id")
+  name      String
+  summary   String
+  rowOrder  Int      @map("row_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  item      MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, name], map: "idx_item_components_item_name")
+  @@map("item_components")
+}
+
+model IngredientDetail {
+  id        String   @id
+  itemId    String   @map("item_id")
+  name      String
+  detail    String
+  rowOrder  Int      @map("row_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  item      MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, name], map: "idx_ingredient_details_item_name")
+  @@map("ingredient_details")
+}

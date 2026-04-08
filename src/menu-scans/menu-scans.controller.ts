@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBody,
+  ApiCreatedResponse,
   ApiConsumes,
   ApiOperation,
   ApiTags,
@@ -24,6 +25,21 @@ export class MenuScansController {
   @Post()
   @ApiOperation({ summary: 'Store a scanned menu photo for a user.' })
   @ApiConsumes('multipart/form-data')
+  @ApiCreatedResponse({
+    description: 'Returns the stored scan record with a public Vercel Blob URL.',
+    schema: {
+      example: {
+        message: 'Menu scan saved successfully.',
+        data: {
+          id: 101,
+          user_id: 12,
+          scan_photo:
+            'https://example-public.blob.vercel-storage.com/scan_photo/scan-7d5f9f7a.jpg',
+          captured_at: '2026-04-08T10:22:30.000Z',
+        },
+      },
+    },
+  })
   @ApiBody({
     schema: {
       type: 'object',
@@ -36,6 +52,8 @@ export class MenuScansController {
         scan_photo: {
           type: 'string',
           format: 'binary',
+          description:
+            'Uploaded file that will be stored in Vercel Blob under the scan_photo/ folder.',
         },
       },
     },

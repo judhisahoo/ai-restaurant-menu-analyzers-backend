@@ -17,7 +17,9 @@ export class UserController {
   }
 
   @Post('register')
-  @ApiOperation({ summary: 'Register a user by email.' })
+  @ApiOperation({
+    summary: 'Register a user by email and store the initial location.',
+  })
   register(@Body() payload: RegisterUserDto) {
     return this.userService.register(payload);
   }

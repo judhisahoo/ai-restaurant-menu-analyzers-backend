@@ -1,41 +1,53 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { put } from '@vercel/blob';
 import { generateId } from './id.util';
-import {
-  resolveItemImageDirectory,
-  resolveScanPhotoDirectory,
-} from './app-paths.util';
 
 type ImageBucket = 'scan_photo' | 'item_image';
 
-const directoryByBucket: Record<ImageBucket, string> = {
-  scan_photo: resolveScanPhotoDirectory(),
-  item_image: resolveItemImageDirectory(),
+const blobDirectoryByBucket: Record<ImageBucket, string> = {
+  scan_photo: 'scan_photo',
+  item_image: 'item_image',
 };
+
+function resolveBlobToken(): string {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+
+  if (!token) {
+    throw new Error(
+      'BLOB_READ_WRITE_TOKEN is not configured. Connect a Vercel Blob store to this project or add the token manually.',
+    );
+  }
+
+  return token;
+}
 
 function extensionFromMimeType(mimeType: string): string {
   const [, subtype = 'jpg'] = mimeType.split('/');
   return subtype.replace('jpeg', 'jpg').replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
 }
 
-function saveBinaryImage(
+async function saveBinaryImage(
   buffer: Buffer,
   bucket: ImageBucket,
   prefix: string,
   extension: string,
-): string {
+  mimeType?: string,
+): Promise<string> {
   const sanitizedExtension = extension.replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
-  const fileName = `${prefix}-${generateId()}.${sanitizedExtension}`;
-  const filePath = path.join(directoryByBucket[bucket], fileName);
-  fs.writeFileSync(filePath, buffer);
-  return `${bucket}/${fileName}`;
+  const pathname = `${blobDirectoryByBucket[bucket]}/${prefix}-${generateId()}.${sanitizedExtension}`;
+  const blob = await put(pathname, buffer, {
+    access: 'public',
+    contentType: mimeType,
+    token: resolveBlobToken(),
+  });
+
+  return blob.url;
 }
 
-function tryPersistDataUrlImage(
+async function tryPersistDataUrlImage(
   value: string,
   bucket: ImageBucket,
   prefix: string,
-): string | null {
+): Promise<string | null> {
   const dataUrlMatch = value.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
 
   if (!dataUrlMatch) {
@@ -44,19 +56,20 @@ function tryPersistDataUrlImage(
 
   const [, mimeType, base64Payload] = dataUrlMatch;
   const buffer = Buffer.from(base64Payload, 'base64');
-  return saveBinaryImage(
+  return await saveBinaryImage(
     buffer,
     bucket,
     prefix,
     extensionFromMimeType(mimeType),
+    mimeType,
   );
 }
 
-function tryPersistRawBase64Image(
+async function tryPersistRawBase64Image(
   value: string,
   bucket: ImageBucket,
   prefix: string,
-): string | null {
+): Promise<string | null> {
   const cleaned = value.replace(/\s+/g, '');
   const looksLikeBase64 =
     cleaned.length > 128 && /^[A-Za-z0-9+/=]+$/.test(cleaned);
@@ -65,22 +78,32 @@ function tryPersistRawBase64Image(
     return null;
   }
 
-  return saveBinaryImage(Buffer.from(cleaned, 'base64'), bucket, prefix, 'jpg');
+  return await saveBinaryImage(
+    Buffer.from(cleaned, 'base64'),
+    bucket,
+    prefix,
+    'jpg',
+    'image/jpeg',
+  );
 }
 
-export function persistImageValue(
+export async function persistImageValue(
   rawValue: string,
   bucket: ImageBucket,
   prefix: string,
-): string {
+): Promise<string> {
   const trimmedValue = rawValue.trim();
 
-  const storedFromDataUrl = tryPersistDataUrlImage(trimmedValue, bucket, prefix);
+  const storedFromDataUrl = await tryPersistDataUrlImage(
+    trimmedValue,
+    bucket,
+    prefix,
+  );
   if (storedFromDataUrl) {
     return storedFromDataUrl;
   }
 
-  const storedFromRawBase64 = tryPersistRawBase64Image(
+  const storedFromRawBase64 = await tryPersistRawBase64Image(
     trimmedValue,
     bucket,
     prefix,
@@ -92,11 +115,17 @@ export function persistImageValue(
   return trimmedValue;
 }
 
-export function persistUploadedImage(
+export async function persistUploadedImage(
   buffer: Buffer,
   mimeType: string,
   bucket: ImageBucket,
   prefix: string,
-): string {
-  return saveBinaryImage(buffer, bucket, prefix, extensionFromMimeType(mimeType));
+): Promise<string> {
+  return saveBinaryImage(
+    buffer,
+    bucket,
+    prefix,
+    extensionFromMimeType(mimeType),
+    mimeType,
+  );
 }

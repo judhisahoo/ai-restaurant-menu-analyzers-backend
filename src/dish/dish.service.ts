@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { generateId } from '../common/utils/id.util';
 import { persistImageValue } from '../common/utils/image-storage.util';
 import {
@@ -14,24 +15,14 @@ import {
   getRequiredString,
   unwrapSinglePayload,
 } from '../common/utils/request-parsing.util';
-import { currentTimestamp } from '../common/utils/timestamps.util';
-import { DatabaseService } from '../database/database.service';
+import { PrismaService } from '../database/prisma.service';
 import { UserService } from '../user/user.service';
 import { ItemSearchDto } from './dto/item-search.dto';
-
-interface MenuItemRow {
-  id: string;
-  name: string;
-  short_description: string;
-  image: string | null;
-  created_at: string;
-  updated_at: string;
-}
 
 @Injectable()
 export class DishService {
   constructor(
-    private readonly databaseService: DatabaseService,
+    private readonly prismaService: PrismaService,
     private readonly userService: UserService,
   ) {}
 
@@ -42,7 +33,7 @@ export class DishService {
 
     await this.userService.ensureUserExists(userId);
 
-    return this.databaseService.withTransaction(async () => {
+    return this.prismaService.$transaction(async (tx) => {
       const createdItems: Array<Record<string, unknown>> = [];
       const reusedItems: Array<Record<string, unknown>> = [];
       const userLinks: Array<Record<string, unknown>> = [];
@@ -56,10 +47,18 @@ export class DishService {
         );
         const rawImage = getOptionalString(item.image, 'itemdata[].image');
 
-        const existingItem = await this.databaseService.get<Pick<MenuItemRow, 'id' | 'name'>>(
-          'SELECT id, name FROM menu_items WHERE lower(name) = lower(?);',
-          [name],
-        );
+        const existingItem = await tx.menuItem.findFirst({
+          where: {
+            name: {
+              equals: name,
+              mode: 'insensitive',
+            },
+          },
+          select: {
+            id: true,
+            name: true,
+          },
+        });
 
         let itemId: string;
         if (existingItem) {
@@ -71,15 +70,20 @@ export class DishService {
           });
         } else {
           itemId = generateId();
-          const timestamp = currentTimestamp();
+          const now = new Date();
           const storedImage = rawImage
-            ? persistImageValue(rawImage, 'item_image', 'item')
+            ? await persistImageValue(rawImage, 'item_image', 'item')
             : null;
-          await this.databaseService.run(
-            `INSERT INTO menu_items (id, name, short_description, image, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?);`,
-            [itemId, name, shortDescription, storedImage, timestamp, timestamp],
-          );
+          await tx.menuItem.create({
+            data: {
+              id: itemId,
+              name,
+              shortDescription,
+              image: storedImage,
+              createdAt: now,
+              updatedAt: now,
+            },
+          });
 
           createdItems.push({
             id: itemId,
@@ -89,20 +93,28 @@ export class DishService {
           });
         }
 
-        const existingLink = await this.databaseService.get<{ id: string }>(
-          `SELECT id FROM user_menu_items
-           WHERE item_id = ? AND user_id = ?;`,
-          [itemId, userId],
-        );
+        const existingLink = await tx.userMenuItem.findFirst({
+          where: {
+            itemId,
+            userId,
+          },
+          select: {
+            id: true,
+          },
+        });
 
         if (!existingLink) {
-          const timestamp = currentTimestamp();
+          const now = new Date();
           const linkId = generateId();
-          await this.databaseService.run(
-            `INSERT INTO user_menu_items (id, item_id, user_id, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?);`,
-            [linkId, itemId, userId, timestamp, timestamp],
-          );
+          await tx.userMenuItem.create({
+            data: {
+              id: linkId,
+              itemId,
+              userId,
+              createdAt: now,
+              updatedAt: now,
+            },
+          });
 
           userLinks.push({
             id: linkId,
@@ -130,41 +142,53 @@ export class DishService {
       throw new BadRequestException('item_title must be a non-empty string.');
     }
 
-    const items = await this.databaseService.all<MenuItemRow>(
-      `SELECT id, name, short_description, image, created_at, updated_at
-       FROM menu_items
-       WHERE name LIKE ?
-       ORDER BY name ASC;`,
-      [`%${searchTerm}%`],
-    );
+    const items = await this.prismaService.menuItem.findMany({
+      where: {
+        name: {
+          contains: searchTerm,
+          mode: 'insensitive',
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
 
     return {
       message: 'Dish search completed successfully.',
-      data: items,
+      data: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        short_description: item.shortDescription,
+        image: item.image,
+        created_at: item.createdAt.toISOString(),
+        updated_at: item.updatedAt.toISOString(),
+      })),
     };
   }
 
   async getItemComponents(itemId: string) {
     const normalizedItemId = await this.ensureItemExists(itemId);
-    const components = await this.databaseService.all<{
-      id: string;
-      item_id: string;
-      name: string;
-      summary: string;
-      row_order: number;
-      created_at: string;
-      updated_at: string;
-    }>(
-      `SELECT id, item_id, name, summary, row_order, created_at, updated_at
-       FROM item_components
-       WHERE item_id = ?
-       ORDER BY row_order ASC;`,
-      [normalizedItemId],
-    );
+    const components = await this.prismaService.itemComponent.findMany({
+      where: {
+        itemId: normalizedItemId,
+      },
+      orderBy: {
+        rowOrder: 'asc',
+      },
+    });
 
     return {
       message: 'Item components fetched successfully.',
-      data: components,
+      data: components.map((component) => ({
+        id: component.id,
+        item_id: component.itemId,
+        name: component.name,
+        summary: component.summary,
+        row_order: component.rowOrder,
+        created_at: component.createdAt.toISOString(),
+        updated_at: component.updatedAt.toISOString(),
+      })),
     };
   }
 
@@ -174,10 +198,11 @@ export class DishService {
     const normalizedItemId = await this.ensureItemExists(itemId);
     const rawComponents = getArray(wrapper.componentData, 'componentData');
 
-    return this.databaseService.withTransaction(async () => {
+    return this.prismaService.$transaction(async (tx) => {
       const createdComponents: Array<Record<string, unknown>> = [];
       const skippedComponents: Array<Record<string, unknown>> = [];
       let currentOrder = await this.getNextOrderValue(
+        tx,
         'item_components',
         normalizedItemId,
       );
@@ -193,14 +218,19 @@ export class DishService {
           'componentData[].summary',
         );
 
-        const existingComponent = await this.databaseService.get<{
-          id: string;
-          row_order: number;
-        }>(
-          `SELECT id, row_order FROM item_components
-           WHERE item_id = ? AND lower(name) = lower(?);`,
-          [normalizedItemId, name],
-        );
+        const existingComponent = await tx.itemComponent.findFirst({
+          where: {
+            itemId: normalizedItemId,
+            name: {
+              equals: name,
+              mode: 'insensitive',
+            },
+          },
+          select: {
+            id: true,
+            rowOrder: true,
+          },
+        });
 
         if (existingComponent) {
           skippedComponents.push({
@@ -212,21 +242,19 @@ export class DishService {
         }
 
         currentOrder += 1;
-        const timestamp = currentTimestamp();
+        const now = new Date();
         const componentId = generateId();
-        await this.databaseService.run(
-          `INSERT INTO item_components (id, item_id, name, summary, row_order, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?);`,
-          [
-            componentId,
-            normalizedItemId,
+        await tx.itemComponent.create({
+          data: {
+            id: componentId,
+            itemId: normalizedItemId,
             name,
             summary,
-            currentOrder,
-            timestamp,
-            timestamp,
-          ],
-        );
+            rowOrder: currentOrder,
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
 
         createdComponents.push({
           id: componentId,
@@ -250,25 +278,26 @@ export class DishService {
 
   async getItemIngredients(itemId: string) {
     const normalizedItemId = await this.ensureItemExists(itemId);
-    const ingredients = await this.databaseService.all<{
-      id: string;
-      item_id: string;
-      name: string;
-      detail: string;
-      row_order: number;
-      created_at: string;
-      updated_at: string;
-    }>(
-      `SELECT id, item_id, name, detail, row_order, created_at, updated_at
-       FROM ingredient_details
-       WHERE item_id = ?
-       ORDER BY row_order ASC;`,
-      [normalizedItemId],
-    );
+    const ingredients = await this.prismaService.ingredientDetail.findMany({
+      where: {
+        itemId: normalizedItemId,
+      },
+      orderBy: {
+        rowOrder: 'asc',
+      },
+    });
 
     return {
       message: 'Ingredient details fetched successfully.',
-      data: ingredients,
+      data: ingredients.map((ingredient) => ({
+        id: ingredient.id,
+        item_id: ingredient.itemId,
+        name: ingredient.name,
+        detail: ingredient.detail,
+        row_order: ingredient.rowOrder,
+        created_at: ingredient.createdAt.toISOString(),
+        updated_at: ingredient.updatedAt.toISOString(),
+      })),
     };
   }
 
@@ -278,10 +307,11 @@ export class DishService {
     const normalizedItemId = await this.ensureItemExists(itemId);
     const rawIngredients = getArray(wrapper.ingredientData, 'ingredientData');
 
-    return this.databaseService.withTransaction(async () => {
+    return this.prismaService.$transaction(async (tx) => {
       const createdIngredients: Array<Record<string, unknown>> = [];
       const skippedIngredients: Array<Record<string, unknown>> = [];
       let currentOrder = await this.getNextOrderValue(
+        tx,
         'ingredient_details',
         normalizedItemId,
       );
@@ -297,14 +327,19 @@ export class DishService {
           'ingredientData[].detail',
         );
 
-        const existingIngredient = await this.databaseService.get<{
-          id: string;
-          row_order: number;
-        }>(
-          `SELECT id, row_order FROM ingredient_details
-           WHERE item_id = ? AND lower(name) = lower(?);`,
-          [normalizedItemId, name],
-        );
+        const existingIngredient = await tx.ingredientDetail.findFirst({
+          where: {
+            itemId: normalizedItemId,
+            name: {
+              equals: name,
+              mode: 'insensitive',
+            },
+          },
+          select: {
+            id: true,
+            rowOrder: true,
+          },
+        });
 
         if (existingIngredient) {
           skippedIngredients.push({
@@ -316,21 +351,19 @@ export class DishService {
         }
 
         currentOrder += 1;
-        const timestamp = currentTimestamp();
+        const now = new Date();
         const ingredientId = generateId();
-        await this.databaseService.run(
-          `INSERT INTO ingredient_details (id, item_id, name, detail, row_order, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?);`,
-          [
-            ingredientId,
-            normalizedItemId,
+        await tx.ingredientDetail.create({
+          data: {
+            id: ingredientId,
+            itemId: normalizedItemId,
             name,
             detail,
-            currentOrder,
-            timestamp,
-            timestamp,
-          ],
-        );
+            rowOrder: currentOrder,
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
 
         createdIngredients.push({
           id: ingredientId,
@@ -354,10 +387,10 @@ export class DishService {
 
   private async ensureItemExists(itemId: string): Promise<string> {
     const normalizedItemId = getRequiredIdentifier(itemId, 'item_id');
-    const item = await this.databaseService.get<{ id: string }>(
-      'SELECT id FROM menu_items WHERE id = ?;',
-      [normalizedItemId],
-    );
+    const item = await this.prismaService.menuItem.findUnique({
+      where: { id: normalizedItemId },
+      select: { id: true },
+    });
 
     if (!item) {
       throw new NotFoundException(`Menu item ${normalizedItemId} was not found.`);
@@ -367,17 +400,25 @@ export class DishService {
   }
 
   private async getNextOrderValue(
+    tx: Prisma.TransactionClient,
     tableName: 'item_components' | 'ingredient_details',
     itemId: string,
   ): Promise<number> {
-    const row = await this.databaseService.get<{ maxOrder: number }>(
-      `SELECT COALESCE(MAX(row_order), 0) AS maxOrder
-       FROM ${tableName}
-       WHERE item_id = ?;`,
-      [itemId],
-    );
+    if (tableName === 'item_components') {
+      const result = await tx.itemComponent.aggregate({
+        where: { itemId },
+        _max: { rowOrder: true },
+      });
 
-    return row?.maxOrder ?? 0;
+      return result._max.rowOrder ?? 0;
+    }
+
+    const result = await tx.ingredientDetail.aggregate({
+      where: { itemId },
+      _max: { rowOrder: true },
+    });
+
+    return result._max.rowOrder ?? 0;
   }
 
   private resolveItemId(routeItemId: string, bodyItemId: unknown): string {

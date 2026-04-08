@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { persistUploadedImage } from '../common/utils/image-storage.util';
-import { currentTimestamp } from '../common/utils/timestamps.util';
-import { DatabaseService } from '../database/database.service';
+import { PrismaService } from '../database/prisma.service';
 import { UserService } from '../user/user.service';
 
 @Injectable()
 export class MenuScansService {
   constructor(
-    private readonly databaseService: DatabaseService,
+    private readonly prismaService: PrismaService,
     private readonly userService: UserService,
   ) {}
 
@@ -17,26 +16,28 @@ export class MenuScansService {
   ) {
     await this.userService.ensureUserExists(userId);
 
-    const capturedAt = currentTimestamp();
-    const storedPhoto = persistUploadedImage(
+    const capturedAt = new Date();
+    const storedPhoto = await persistUploadedImage(
       file.buffer,
       file.mimetype,
       'scan_photo',
       'scan',
     );
-    const result = await this.databaseService.run(
-      `INSERT INTO menu_scans (user_id, scan_photo, captured_at)
-       VALUES (?, ?, ?);`,
-      [userId, storedPhoto, capturedAt],
-    );
+    const menuScan = await this.prismaService.menuScan.create({
+      data: {
+        userId,
+        scanPhoto: storedPhoto,
+        capturedAt,
+      },
+    });
 
     return {
       message: 'Menu scan saved successfully.',
       data: {
-        id: result.lastID,
+        id: menuScan.id,
         user_id: userId,
         scan_photo: storedPhoto,
-        captured_at: capturedAt,
+        captured_at: menuScan.capturedAt.toISOString(),
       },
     };
   }
