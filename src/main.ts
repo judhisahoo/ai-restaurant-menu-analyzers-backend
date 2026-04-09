@@ -1,13 +1,22 @@
-import 'dotenv/config';
-import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
-const { buildSwaggerInitJS } = require('@nestjs/swagger/dist/swagger-ui/swagger-ui');
+import "dotenv/config";
+import { ValidationPipe } from "@nestjs/common";
+import { NestFactory } from "@nestjs/core";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { AppModule } from "./app.module";
+const {
+  buildSwaggerInitJS,
+} = require("@nestjs/swagger/dist/swagger-ui/swagger-ui");
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
+  /*app.enableCors({
+    origin: true,
+    credentials: true,
+  });*/
+  app.enableCors({
+    origin: "*",
+  });
+  app.setGlobalPrefix("api");
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -19,28 +28,30 @@ async function bootstrap() {
   );
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Restaurant Menu AI Backend')
+    .setTitle("Restaurant Menu AI Backend")
     .setDescription(
-      'REST API for the restaurant menu scan thesis workflow: scan menu, process AI menu items, view dish components, and open ingredient details.',
+      "REST API for the restaurant menu scan thesis workflow: scan menu, process AI menu items, view dish components, and open ingredient details.",
     )
-    .setVersion('1.0.0')
+    .setVersion("1.0.0")
     .build();
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 
-  app.getHttpAdapter().get('/api/docs-json', (_request: any, response: any) => {
+  app.getHttpAdapter().get("/api/docs-json", (_request: any, response: any) => {
     response.json(swaggerDocument);
   });
 
-  app.getHttpAdapter().get('/api/docs/swagger-ui-init.js', (_request: any, response: any) => {
-    response.type('application/javascript');
-    const swaggerInitJs = buildSwaggerInitJS(swaggerDocument, {
-      swaggerOptions: {
-        url: '/api/docs-json',
-      },
+  app
+    .getHttpAdapter()
+    .get("/api/docs/swagger-ui-init.js", (_request: any, response: any) => {
+      response.type("application/javascript");
+      const swaggerInitJs = buildSwaggerInitJS(swaggerDocument, {
+        swaggerOptions: {
+          url: "/api/docs-json",
+        },
+      });
+      response.send(swaggerInitJs);
     });
-    response.send(swaggerInitJs);
-  });
 
   const swaggerHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -60,13 +71,13 @@ async function bootstrap() {
 </body>
 </html>`;
 
-  app.getHttpAdapter().get('/api/docs', (_request: any, response: any) => {
-    response.type('text/html');
+  app.getHttpAdapter().get("/api/docs", (_request: any, response: any) => {
+    response.type("text/html");
     response.send(swaggerHtml);
   });
 
-  app.getHttpAdapter().get('/api/docs/', (_request: any, response: any) => {
-    response.type('text/html');
+  app.getHttpAdapter().get("/api/docs/", (_request: any, response: any) => {
+    response.type("text/html");
     response.send(swaggerHtml);
   });
 
