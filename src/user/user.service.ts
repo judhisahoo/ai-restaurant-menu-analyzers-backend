@@ -68,6 +68,15 @@ export class UserService {
             updatedAt: now,
             verifiedAt: now,
           },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            deviceId: true,
+            createdAt: true,
+            updatedAt: true,
+            verifiedAt: true,
+          },
         });
 
         const location = await tx.locationHistory.create({
