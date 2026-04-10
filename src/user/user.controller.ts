@@ -13,6 +13,7 @@ export class UserController {
   @Post('send-otp')
   @ApiOperation({ summary: 'Accept an OTP payload from the client.' })
   sendOtp(@Body() payload: SendOtpDto) {
+    console.log("calling send-otp api");
     return this.userService.sendOtp(payload);
   }
 

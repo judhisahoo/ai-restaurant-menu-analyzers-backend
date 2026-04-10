@@ -7,6 +7,11 @@ export class RegisterUserDto {
   @IsEmail()
   email!: string;
 
+  @ApiProperty({ example: 'John Doe' })
+  @IsString()
+  @MinLength(2, { message: 'Name must be at least 2 characters long' })
+  name!: string;
+
   @ApiProperty({ example: 'cdsacascadca' })
   @IsString()
   @MinLength(3)

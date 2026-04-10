@@ -1,12 +1,11 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   Logger,
   NotFoundException,
-  ServiceUnavailableException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { EmailService } from '../common/email/email.service';
 import { CurrentLocationDto } from './dto/current-location.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
@@ -15,82 +14,32 @@ import { SendOtpDto } from './dto/send-otp.dto';
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async sendOtp(payload: SendOtpDto) {
-    const mailgunApiKey = process.env.MAILGUN_API_KEY;
-    const mailgunDomain = process.env.MAILGUN_DOMAIN;
-    const fromEmail = process.env.MAILGUN_FROM_EMAIL;
-    const mailgunBaseUrl =
-      process.env.MAILGUN_BASE_URL ?? 'https://api.mailgun.net';
-
     this.logger.log('Attempting to send OTP email.');
-    this.logger.log(`MAILGUN_API_KEY: ${mailgunApiKey ? 'Configured' : 'Not Set'}`);
-    this.logger.log(`MAILGUN_DOMAIN: ${mailgunDomain || 'Not Set'}`);
-    this.logger.log(`MAILGUN_FROM_EMAIL: ${fromEmail || 'Not Set'}`);
-    this.logger.log(`MAILGUN_BASE_URL: ${mailgunBaseUrl}`);
-
-    if (!mailgunApiKey) {
-      throw new InternalServerErrorException(
-        'MAILGUN_API_KEY is not configured.',
-      );
-    }
-
-    if (!mailgunDomain) {
-      throw new InternalServerErrorException('MAILGUN_DOMAIN is not configured.');
-    }
-
-    if (!fromEmail) {
-      throw new InternalServerErrorException(
-        'MAILGUN_FROM_EMAIL is not configured.',
-      );
-    }
 
     const to = payload.email;
-    const subject = 'Your OTP Code';
-    const text = `Your OTP code is: ${payload.otp}`;
-    const html = `<p>Your OTP code is: <strong>${payload.otp}</strong></p>`;
+    this.logger.log(`Sending OTP to ${to}`);
 
     try {
-      const formData = new FormData();
-      formData.append('from', fromEmail);
-      formData.append('to', to);
-      formData.append('subject', subject);
-      formData.append('text', text);
-      formData.append('html', html);
-      formData.append('o:tracking', 'no');
-
-      const authHeader = Buffer.from(`api:${mailgunApiKey}`).toString('base64');
-      const response = await fetch(
-        `${mailgunBaseUrl}/v3/${encodeURIComponent(mailgunDomain)}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Basic ${authHeader}`,
-          },
-          body: formData,
-        },
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Mailgun rejected the request with status ${response.status}${errorText ? `: ${errorText}` : ''}`,
-        );
-      }
+      const result = await this.emailService.sendOtp(payload.email, payload.otp);
+      
+      this.logger.log(`OTP email sent successfully. Message ID: ${result.messageId}`);
+      
+      return {
+        message: 'OTP sent successfully.',
+        email: payload.email,
+        note: 'OTP email was sent and is not persisted because the provided schema has no OTP table.',
+      };
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unknown Mailgun error.';
-      throw new ServiceUnavailableException(
-        `Failed to send OTP via Mailgun: ${message}`,
-      );
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to send OTP: ${errorMessage}`, error);
+      throw error; // Re-throw to be handled by exception filters
     }
-
-    return {
-      message: 'OTP sent successfully.',
-      email: payload.email,
-      note: 'OTP email was sent through Mailgun and is not persisted because the provided schema has no OTP table.',
-    };
   }
 
   async register(payload: RegisterUserDto) {
@@ -113,6 +62,8 @@ export class UserService {
         const createdUser = await tx.user.create({
           data: {
             email: payload.email,
+            name: payload.name,
+            deviceId: payload.deviceId,
             createdAt: now,
             updatedAt: now,
             verifiedAt: now,
@@ -138,7 +89,8 @@ export class UserService {
       data: {
         id: createdUser.id,
         email: payload.email,
-        deviceId: payload.deviceId,
+        name: createdUser.name,
+        deviceId: createdUser.deviceId,
         created_at: createdUser.createdAt.toISOString(),
         updated_at: createdUser.updatedAt.toISOString(),
         verified_at: createdUser.verifiedAt.toISOString(),
@@ -150,7 +102,6 @@ export class UserService {
           captured_at: location.capturedAt.toISOString(),
         },
       },
-      note: 'deviceId is accepted from the client but not persisted because it is not part of the database schema.',
     };
   }
 

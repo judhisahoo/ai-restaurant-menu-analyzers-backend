@@ -11,6 +11,8 @@ datasource db {
 model User {
   id            Int              @id @default(autoincrement())
   email         String           @unique
+  name          String?
+  deviceId      String?          @map("deviceId")
   createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
   verifiedAt    DateTime         @map("verified_at") @db.Timestamptz(3)
