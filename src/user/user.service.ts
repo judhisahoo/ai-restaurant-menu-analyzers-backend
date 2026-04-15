@@ -9,6 +9,9 @@ import { EmailService } from '../common/email/email.service';
 import { CurrentLocationDto } from './dto/current-location.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
+import { PrismaClient } from '@prisma/client';
+
+type TransactionClient = Omit<PrismaClient, '$on' | '$connect' | '$disconnect' | '$transaction' | '$extends' | '$use'>;
 
 @Injectable()
 export class UserService {
@@ -52,36 +55,56 @@ export class UserService {
       },
     });
 
-    if (existingUser) {
-      throw new ConflictException('A user with this email already exists.');
-    }
-
     const now = new Date();
-    const { createdUser, location } = await this.prismaService.$transaction(
-      async (tx) => {
-        const createdUser = await tx.user.create({
-          data: {
-            email: payload.email,
-            name: payload.name,
-            deviceId: payload.deviceId,
-            createdAt: now,
-            updatedAt: now,
-            verifiedAt: now,
-          },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            deviceId: true,
-            createdAt: true,
-            updatedAt: true,
-            verifiedAt: true,
-          },
-        });
+    const { user, location } = await this.prismaService.$transaction(
+      async (tx: TransactionClient): Promise<{ user: any; location: any }> => {
+        let user;
+
+        if (existingUser) {
+          // Update existing user's name
+          user = await tx.user.update({
+            where: { id: existingUser.id },
+            data: {
+              name: payload.name,
+              deviceId: payload.deviceId,
+              updatedAt: now,
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              deviceId: true,
+              createdAt: true,
+              updatedAt: true,
+              verifiedAt: true,
+            },
+          });
+        } else {
+          // Create new user
+          user = await tx.user.create({
+            data: {
+              email: payload.email,
+              name: payload.name,
+              deviceId: payload.deviceId,
+              createdAt: now,
+              updatedAt: now,
+              verifiedAt: now,
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              deviceId: true,
+              createdAt: true,
+              updatedAt: true,
+              verifiedAt: true,
+            },
+          });
+        }
 
         const location = await tx.locationHistory.create({
           data: {
-            userId: createdUser.id,
+            userId: user.id,
             latitude: payload.latitude,
             longitude: payload.longitude,
             accuracy: payload.accuracy ?? null,
@@ -89,20 +112,22 @@ export class UserService {
           },
         });
 
-        return { createdUser, location };
+        return { user, location };
       },
     );
 
+    const isNewUser = !existingUser;
+
     return {
-      message: 'User registered successfully.',
+      message: isNewUser ? 'User registered successfully.' : 'User updated successfully.',
       data: {
-        id: createdUser.id,
+        id: user.id,
         email: payload.email,
-        name: createdUser.name,
-        deviceId: createdUser.deviceId,
-        created_at: createdUser.createdAt.toISOString(),
-        updated_at: createdUser.updatedAt.toISOString(),
-        verified_at: createdUser.verifiedAt.toISOString(),
+        name: user.name,
+        deviceId: user.deviceId,
+        created_at: user.createdAt.toISOString(),
+        updated_at: user.updatedAt.toISOString(),
+        verified_at: user.verifiedAt.toISOString(),
         location: {
           id: location.id,
           latitude: location.latitude,

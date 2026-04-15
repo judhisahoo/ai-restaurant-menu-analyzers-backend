@@ -1,0 +1,18 @@
+by "/api/menu-scans" server accept a scan image of hotel menu with user_id. I want new feature here as bellow.
+Once image uploaded to vercel store. app call a internal function named process_ai_for_dis_data() where app send the image to Gemini AI for bellow purpose.
+Gemini AI parse the scan image of restaurant.
+Collection Dish name. Process the dish name for bellow information.
+1)dish name
+2)dish short description of 50 words
+
+for exam menu image content 30 dishs then.
+Gemini AI must return 30 dishes above information.
+
+Once process_ai_for_dis_data() method receive data. this inner function also call another function called get_dish_image_by_dish_name(dish_name)
+in get_dish_image_by_dish_name() check do dish_name exists in "menu_items" table? 
+
+if exist collect dish_image from "menu_items" on the base of "name".Add "image" key in the selected object created by process_ai_for_dis_data() go for next dish name for process the data.
+if name not found then fist
+
+from AI then function start one background process and return data and images to main api function. Api function return json response all data of two dimension array like [{name:"test",short_description:"short description",image:"image url"},{name:"test1",short_description:"short description1",image:"image url 1"}]
+Let me explain about background process. in back ground process. we create array. 

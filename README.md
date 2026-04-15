@@ -13,6 +13,7 @@ NestJS REST API for the thesis workflow below:
 - Prisma ORM with PostgreSQL schema, migrations, seed, and import/export scripts
 - Supabase PostgreSQL support for Vercel deployment
 - Vercel Blob storage for `scan_photo` and `item_image`
+- `ON_LINE_PROCESS=true` support for live Gemini menu parsing, with offline fallback from `data/dish_data.json`
 - Swagger UI and JSON document output
 - REST APIs for user registration, OTP intake, location history, menu scans, dish items, components, and ingredients
 
@@ -42,7 +43,12 @@ DIRECT_URL=postgresql://postgres:[your-password]@db.[project-ref].supabase.co:54
 SUPABASE_PROJECT_URL=https://your-project-ref.supabase.co
 SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 BLOB_READ_WRITE_TOKEN=vercel_blob_read_write_token
+ON_LINE_PROCESS=false
+GEMINI_API_KEY=your-gemini-api-key
 ```
+
+Set `ON_LINE_PROCESS=true` only when `GEMINI_API_KEY` is configured and live Gemini extraction should be used.
+When `ON_LINE_PROCESS=false`, `/menu-scans` returns normalized fallback dishes from `data/dish_data.json`.
 
 Use the Supabase session pooler string in `DATABASE_URL` for local/persistent backend runtime.
 Use the Supabase direct connection string in `DIRECT_URL` for Prisma migrations when your environment supports IPv6.

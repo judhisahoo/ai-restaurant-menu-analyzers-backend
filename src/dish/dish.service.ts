@@ -3,7 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaService } from '../database/prisma.service'; // Ensure PrismaService is imported here
+
+// Explicitly define the type for a transaction client that can be used within Prisma transactions.
+type TransactionClient = Omit<PrismaClient, '$on' | '$connect' | '$disconnect' | '$transaction' | '$extends' | '$use'>;
+
 import { generateId } from '../common/utils/id.util';
 import { persistImageValue } from '../common/utils/image-storage.util';
 import {
@@ -15,7 +20,6 @@ import {
   getRequiredString,
   unwrapSinglePayload,
 } from '../common/utils/request-parsing.util';
-import { PrismaService } from '../database/prisma.service';
 import { UserService } from '../user/user.service';
 import { ItemSearchDto } from './dto/item-search.dto';
 
@@ -33,7 +37,7 @@ export class DishService {
 
     await this.userService.ensureUserExists(userId);
 
-    return this.prismaService.$transaction(async (tx) => {
+    return this.prismaService.$transaction(async (tx: TransactionClient): Promise<any> => {
       const createdItems: Array<Record<string, unknown>> = [];
       const reusedItems: Array<Record<string, unknown>> = [];
       const userLinks: Array<Record<string, unknown>> = [];
@@ -156,7 +160,7 @@ export class DishService {
 
     return {
       message: 'Dish search completed successfully.',
-      data: items.map((item) => ({
+      data: items.map((item: { id: string; name: string; shortDescription: string; image: string | null; createdAt: Date; updatedAt: Date; }) => ({
         id: item.id,
         name: item.name,
         short_description: item.shortDescription,
@@ -180,7 +184,7 @@ export class DishService {
 
     return {
       message: 'Item components fetched successfully.',
-      data: components.map((component) => ({
+      data: components.map((component: { id: string; itemId: string; name: string; summary: string; rowOrder: number; createdAt: Date; updatedAt: Date; }) => ({
         id: component.id,
         item_id: component.itemId,
         name: component.name,
@@ -198,7 +202,7 @@ export class DishService {
     const normalizedItemId = await this.ensureItemExists(itemId);
     const rawComponents = getArray(wrapper.componentData, 'componentData');
 
-    return this.prismaService.$transaction(async (tx) => {
+    return this.prismaService.$transaction(async (tx: TransactionClient): Promise<any> => {
       const createdComponents: Array<Record<string, unknown>> = [];
       const skippedComponents: Array<Record<string, unknown>> = [];
       let currentOrder = await this.getNextOrderValue(
@@ -289,7 +293,7 @@ export class DishService {
 
     return {
       message: 'Ingredient details fetched successfully.',
-      data: ingredients.map((ingredient) => ({
+      data: ingredients.map((ingredient: { id: string; itemId: string; name: string; detail: string; rowOrder: number; createdAt: Date; updatedAt: Date; }) => ({
         id: ingredient.id,
         item_id: ingredient.itemId,
         name: ingredient.name,
@@ -307,7 +311,7 @@ export class DishService {
     const normalizedItemId = await this.ensureItemExists(itemId);
     const rawIngredients = getArray(wrapper.ingredientData, 'ingredientData');
 
-    return this.prismaService.$transaction(async (tx) => {
+    return this.prismaService.$transaction(async (tx: TransactionClient): Promise<any> => {
       const createdIngredients: Array<Record<string, unknown>> = [];
       const skippedIngredients: Array<Record<string, unknown>> = [];
       let currentOrder = await this.getNextOrderValue(
@@ -400,7 +404,7 @@ export class DishService {
   }
 
   private async getNextOrderValue(
-    tx: Prisma.TransactionClient,
+    tx: TransactionClient,
     tableName: 'item_components' | 'ingredient_details',
     itemId: string,
   ): Promise<number> {

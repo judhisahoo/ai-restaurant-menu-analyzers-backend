@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MenuScansService } from './menu-scans.service';
+import { MenuAnalysisResponseDto } from './dto/dish-analysis.dto';
 
 @ApiTags('Menu Scans')
 @Controller('menu-scans')
@@ -23,22 +24,14 @@ export class MenuScansController {
   constructor(private readonly menuScansService: MenuScansService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Store a scanned menu photo for a user.' })
+  @ApiOperation({
+    summary:
+      'Store a scanned menu photo and return processed dish data from Gemini or offline sample data.',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiCreatedResponse({
-    description: 'Returns the stored scan record with a public Vercel Blob URL.',
-    schema: {
-      example: {
-        message: 'Menu scan saved successfully.',
-        data: {
-          id: 101,
-          user_id: 12,
-          scan_photo:
-            'https://example-public.blob.vercel-storage.com/scan_photo/scan-7d5f9f7a.jpg',
-          captured_at: '2026-04-08T10:22:30.000Z',
-        },
-      },
-    },
+    description: 'Returns the stored scan record and analyzed dish data.',
+    type: MenuAnalysisResponseDto,
   })
   @ApiBody({
     schema: {
@@ -53,7 +46,7 @@ export class MenuScansController {
           type: 'string',
           format: 'binary',
           description:
-            'Uploaded file that will be stored in Vercel Blob under the scan_photo/ folder.',
+            'Uploaded file that will be stored in Vercel Blob and then processed for dish extraction.',
         },
       },
     },

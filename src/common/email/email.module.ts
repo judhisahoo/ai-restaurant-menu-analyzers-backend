@@ -5,6 +5,7 @@ import { ResendEmailProvider } from './providers/resend-email.provider';
 import { MailjetEmailProvider } from './providers/mailjet-email.provider';
 import { MailerSendEmailProvider } from './providers/mailersend-email.provider';
 import { ZohoEmailProvider } from './providers/zoho-email.provider';
+import { GmailEmailProvider } from './providers/gmail-email.provider';
 import { IEmailProvider } from './interfaces/email-provider.interface';
 
 /**
@@ -21,12 +22,14 @@ import { IEmailProvider } from './interfaces/email-provider.interface';
  *   - MailjetEmailProvider (MAILJET_API_KEY, MAILJET_SECRET_KEY, MAILJET_FROM_EMAIL)
  *   - MailerSendEmailProvider (SMTP: MAILERSEND_SMTP_HOST, MAILERSEND_SMTP_PORT, MAILERSEND_SMTP_USER, MAILERSEND_SMTP_PASS, MAILERSEND_FROM_EMAIL)
  *   - ZohoEmailProvider (SMTP: ZOHO_SMTP_HOST, ZOHO_SMTP_PORT, ZOHO_SMTP_USER, ZOHO_SMTP_PASS, ZOHO_FROM_EMAIL)
+ *   - GmailEmailProvider (GMAIL_EMAIL, GMAIL_APP_PASSWORD, GMAIL_FROM_NAME - optional)
  * 
  * Example to switch providers:
  *   useClass: ResendEmailProvider
  *   useClass: MailjetEmailProvider
  *   useClass: MailerSendEmailProvider
  *   useClass: ZohoEmailProvider
+ *   useClass: GmailEmailProvider
  * 
  * Example to add SendGrid:
  *   1. Create SendgridEmailProvider in providers/
@@ -35,21 +38,22 @@ import { IEmailProvider } from './interfaces/email-provider.interface';
  */
 @Module({
   providers: [
-    MailgunEmailProvider,
+    //MailgunEmailProvider,
     //ResendEmailProvider,
     //MailjetEmailProvider,
     //MailerSendEmailProvider,
     //ZohoEmailProvider,
+    GmailEmailProvider,
     EmailService,
     {
       provide: 'IEmailProvider',
-      useClass: MailgunEmailProvider,
+      //useClass: MailgunEmailProvider,
       // To switch providers, change useClass to:
       // useClass: ResendEmailProvider,
       // useClass: MailjetEmailProvider,
       // useClass: MailerSendEmailProvider,
       //useClass: ZohoEmailProvider,
-      //useClass: MailerSendEmailProvider,
+      useClass: GmailEmailProvider,
     },
     {
       provide: EmailService,
