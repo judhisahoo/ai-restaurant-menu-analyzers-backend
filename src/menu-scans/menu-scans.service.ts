@@ -30,12 +30,15 @@ export class MenuScansService {
     await this.userService.ensureUserExists(userId);
 
     const capturedAt = new Date();
+    console.log('now at create() for processing menu scan upload to vercel storage and return image url.');
     const storedPhoto = await persistUploadedImage(
       file.buffer,
       file.mimetype,
       'scan_photo',
       'scan',
     );
+    console.log('Menu scan image stored successfully. URL:', storedPhoto);
+    console.log('now at create() for saving menu scan record in database and then processing dish data from menu scan image using Gemini API or fake data based on configuration settings');
     const menuScan = await this.prismaService.menuScan.create({
       data: {
         userId,
@@ -43,7 +46,9 @@ export class MenuScansService {
         capturedAt,
       },
     });
-
+    
+    console.log('Menu scan record saved successfully. ID:', menuScan.id);
+    console.log(' now calling process_ai_for_dis_data() to analyze menu scan image and prepare dish data for response and background persistence.');
     const dishes = await this.process_ai_for_dis_data(userId, storedPhoto);
 
     return {
@@ -64,6 +69,7 @@ export class MenuScansService {
     userId: number,
     imageUrl: string,
   ): Promise<DishDto[]> {
+    console.log('now at process_ai_for_dis_data() for processing dish data from menu scan image using Gemini API or fake data based on configuration settings');
     const extractedDishes = this.isOnlineProcessingEnabled()
       ? await this.geminiService.analyzeMenuImage(imageUrl)
       : await this.readFakeDishData();
@@ -88,10 +94,13 @@ export class MenuScansService {
   }
 
   private isOnlineProcessingEnabled(): boolean {
+    console.log('now at isOnlineProcessingEnabled()');
+    console.log('process.env.ON_LINE_PROCESS ::',process.env.ON_LINE_PROCESS);
     return (process.env.ON_LINE_PROCESS ?? '').trim().toLowerCase() === 'true';
   }
 
   private async readFakeDishData(): Promise<DishDto[]> {
+    console.log('now at readFakeDishData() for preparing fakke data for dish analysis');
     const fakeDataPath = join(process.cwd(), 'data', 'dish_data.json');
     const fileContents = await readFile(fakeDataPath, 'utf8');
     const parsed = JSON.parse(fileContents) as FakeDishRow[];

@@ -85,6 +85,7 @@ If you cannot identify any dishes, return an empty array: []`;
   }
 
   private getClient(): GoogleGenerativeAI {
+    console.log('now at getClient() for initializing Gemini API client with API key from environment variable');
     if (this.genAI) {
       return this.genAI;
     }
