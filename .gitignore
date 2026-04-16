@@ -1,7 +1,8 @@
 node_modules/
 dist/
 coverage/
-data/
+
+
 uploads/
 prisma/data/*.json
 !prisma/data/.gitkeep

@@ -1,0 +1,842 @@
+[
+  {
+    "dish_name": "Biryani (Chicken)",
+    "short_description": "A classic Biryani (Chicken) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'spinach-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 28.6, 'carbohydrates_g': 50.7, 'fats_g': 33.9, 'main_ingredients': ['garam masala', 'turmeric', 'cream']}",
+    "total_calories": 622
+  },
+  {
+    "dish_name": "Vada Pav",
+    "short_description": "A classic Vada Pav dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 23.3, 'carbohydrates_g': 45.9, 'fats_g': 22.3, 'main_ingredients': ['cauliflower', 'spinach', 'coriander', 'cream']}",
+    "total_calories": 477
+  },
+  {
+    "dish_name": "Chole Bhature",
+    "short_description": "A classic Chole Bhature dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'tomato-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 31.4, 'carbohydrates_g': 31.8, 'fats_g': 26.8, 'main_ingredients': ['turmeric', 'cream', 'coriander']}",
+    "total_calories": 494
+  },
+  {
+    "dish_name": "Bhindi Masala",
+    "short_description": "A classic Bhindi Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'coconut-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 30.3, 'carbohydrates_g': 32.0, 'fats_g': 26.6, 'main_ingredients': ['flour', 'coconut milk', 'chili', 'rice', 'peas']}",
+    "total_calories": 488
+  },
+  {
+    "dish_name": "Naan",
+    "short_description": "A classic Naan dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'yogurt-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 26.4, 'carbohydrates_g': 35.9, 'fats_g': 26.6, 'main_ingredients': ['ghee', 'garlic', 'flour', 'rice', 'garam masala']}",
+    "total_calories": 488
+  },
+  {
+    "dish_name": "Kheer",
+    "short_description": "A classic Kheer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'yogurt-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 16.3, 'carbohydrates_g': 60.1, 'fats_g': 13.2, 'main_ingredients': ['cumin', 'coriander', 'garlic', 'cream', 'cauliflower', 'chili']}",
+    "total_calories": 424
+  },
+  {
+    "dish_name": "Rajma Chawal",
+    "short_description": "A classic Rajma Chawal dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'vegetables', 'sauce_base': 'spinach-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 39.0, 'carbohydrates_g': 30.8, 'fats_g': 23.4, 'main_ingredients': ['yogurt', 'ginger', 'coriander', 'tomatoes']}",
+    "total_calories": 489
+  },
+  {
+    "dish_name": "Saag Gosht",
+    "short_description": "A classic Saag Gosht dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'spinach-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 33.8, 'carbohydrates_g': 55.3, 'fats_g': 17.2, 'main_ingredients': ['cream', 'flour', 'chili', 'cumin', 'garlic', 'oil']}",
+    "total_calories": 511
+  },
+  {
+    "dish_name": "Dhokla",
+    "short_description": "A classic Dhokla dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'spinach-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 20.2, 'carbohydrates_g': 55.5, 'fats_g': 24.2, 'main_ingredients': ['spinach', 'peas', 'cumin']}",
+    "total_calories": 520
+  },
+  {
+    "dish_name": "Masala Dosa",
+    "short_description": "A classic Masala Dosa dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'coconut-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 34.3, 'carbohydrates_g': 54.6, 'fats_g': 29.7, 'main_ingredients': ['rice', 'coriander', 'yogurt', 'cauliflower', 'oil']}",
+    "total_calories": 622
+  },
+  {
+    "dish_name": "Butter Chicken",
+    "short_description": "A classic Butter Chicken dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'spinach-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 32.2, 'carbohydrates_g': 33.9, 'fats_g': 24.5, 'main_ingredients': ['oil', 'garlic', 'ginger', 'garam masala']}",
+    "total_calories": 484
+  },
+  {
+    "dish_name": "Garlic Naan",
+    "short_description": "A classic Garlic Naan dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 29.3, 'carbohydrates_g': 67.5, 'fats_g': 24.0, 'main_ingredients': ['coconut milk', 'yogurt', 'tomatoes', 'potatoes']}",
+    "total_calories": 603
+  },
+  {
+    "dish_name": "Baingan Bharta",
+    "short_description": "A classic Baingan Bharta dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'tomato-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 38.3, 'carbohydrates_g': 59.1, 'fats_g': 19.6, 'main_ingredients': ['garam masala', 'oil', 'peas', 'spinach']}",
+    "total_calories": 566
+  },
+  {
+    "dish_name": "Jalebi",
+    "short_description": "A classic Jalebi dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'spinach-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 38.3, 'carbohydrates_g': 58.4, 'fats_g': 24.0, 'main_ingredients': ['oil', 'cauliflower', 'garam masala', 'chili']}",
+    "total_calories": 602
+  },
+  {
+    "dish_name": "Dal Makhani",
+    "short_description": "A classic Dal Makhani dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'tomato-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 37.4, 'carbohydrates_g': 55.0, 'fats_g': 18.7, 'main_ingredients': ['cream', 'rice', 'peas', 'onions']}",
+    "total_calories": 537
+  },
+  {
+    "dish_name": "Naan",
+    "short_description": "A classic Naan dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'spinach-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 26.0, 'carbohydrates_g': 60.8, 'fats_g': 34.7, 'main_ingredients': ['turmeric', 'flour', 'cumin', 'yogurt']}",
+    "total_calories": 659
+  },
+  {
+    "dish_name": "Chicken Tikka Masala",
+    "short_description": "A classic Chicken Tikka Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'tomato-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 34.1, 'carbohydrates_g': 47.1, 'fats_g': 21.3, 'main_ingredients': ['tomatoes', 'spinach', 'ghee', 'garlic', 'oil', 'peas']}",
+    "total_calories": 516
+  },
+  {
+    "dish_name": "Rasgulla",
+    "short_description": "A classic Rasgulla dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'coconut-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 15.3, 'carbohydrates_g': 50.7, 'fats_g': 34.9, 'main_ingredients': ['oil', 'chili', 'ginger', 'garlic', 'cream', 'coriander']}",
+    "total_calories": 578
+  },
+  {
+    "dish_name": "Chole Bhature",
+    "short_description": "A classic Chole Bhature dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'yogurt-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 34.3, 'carbohydrates_g': 51.6, 'fats_g': 33.6, 'main_ingredients': ['garam masala', 'yogurt', 'garlic', 'oil']}",
+    "total_calories": 646
+  },
+  {
+    "dish_name": "Butter Chicken",
+    "short_description": "A classic Butter Chicken dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'coconut-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 15.2, 'carbohydrates_g': 52.5, 'fats_g': 23.8, 'main_ingredients': ['ghee', 'turmeric', 'potatoes']}",
+    "total_calories": 485
+  },
+  {
+    "dish_name": "Saag Gosht",
+    "short_description": "A classic Saag Gosht dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'yogurt-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 32.0, 'carbohydrates_g': 38.3, 'fats_g': 18.5, 'main_ingredients': ['onions', 'rice', 'potatoes', 'cauliflower', 'turmeric', 'chili']}",
+    "total_calories": 447
+  },
+  {
+    "dish_name": "Gulab Jamun",
+    "short_description": "A classic Gulab Jamun dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'tomato-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 20.0, 'carbohydrates_g': 67.8, 'fats_g': 10.3, 'main_ingredients': ['rice', 'tomatoes', 'yogurt', 'garlic', 'flour']}",
+    "total_calories": 443
+  },
+  {
+    "dish_name": "Rajma Chawal",
+    "short_description": "A classic Rajma Chawal dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'coconut-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 33.5, 'carbohydrates_g': 62.3, 'fats_g': 14.5, 'main_ingredients': ['ginger', 'oil', 'flour', 'onions', 'spinach', 'tomatoes']}",
+    "total_calories": 513
+  },
+  {
+    "dish_name": "Samosa",
+    "short_description": "A classic Samosa dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'tomato-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 36.1, 'carbohydrates_g': 52.4, 'fats_g': 17.3, 'main_ingredients': ['spinach', 'cumin', 'chili', 'potatoes']}",
+    "total_calories": 509
+  },
+  {
+    "dish_name": "Chicken Tikka Masala",
+    "short_description": "A classic Chicken Tikka Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'tomato-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 28.4, 'carbohydrates_g': 60.9, 'fats_g': 34.6, 'main_ingredients': ['chili', 'oil', 'cauliflower']}",
+    "total_calories": 668
+  },
+  {
+    "dish_name": "Kadhai Paneer",
+    "short_description": "A classic Kadhai Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'yogurt-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 29.3, 'carbohydrates_g': 52.5, 'fats_g': 19.4, 'main_ingredients': ['cauliflower', 'garlic', 'tomatoes', 'rice', 'potatoes', 'yogurt']}",
+    "total_calories": 501
+  },
+  {
+    "dish_name": "Malai Kofta",
+    "short_description": "A classic Malai Kofta dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'spinach-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 26.2, 'carbohydrates_g': 66.6, 'fats_g': 28.8, 'main_ingredients': ['tomatoes', 'potatoes', 'peas', 'chili']}",
+    "total_calories": 630
+  },
+  {
+    "dish_name": "Chicken Tikka Masala",
+    "short_description": "A classic Chicken Tikka Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'tomato-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 16.9, 'carbohydrates_g': 38.0, 'fats_g': 34.4, 'main_ingredients': ['garam masala', 'garlic', 'chili', 'yogurt', 'cauliflower']}",
+    "total_calories": 529
+  },
+  {
+    "dish_name": "Prawn Masala",
+    "short_description": "A classic Prawn Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'cream-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 17.1, 'carbohydrates_g': 51.9, 'fats_g': 23.0, 'main_ingredients': ['yogurt', 'spinach', 'cauliflower', 'cumin', 'peas', 'turmeric']}",
+    "total_calories": 483
+  },
+  {
+    "dish_name": "Malai Kofta",
+    "short_description": "A classic Malai Kofta dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'yogurt-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 34.6, 'carbohydrates_g': 32.6, 'fats_g': 30.2, 'main_ingredients': ['coconut milk', 'cauliflower', 'tomatoes', 'cream', 'chili', 'oil']}",
+    "total_calories": 540
+  },
+  {
+    "dish_name": "Palak Paneer",
+    "short_description": "A classic Palak Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'yogurt-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 16.0, 'carbohydrates_g': 69.8, 'fats_g': 33.1, 'main_ingredients': ['garam masala', 'cumin', 'oil']}",
+    "total_calories": 641
+  },
+  {
+    "dish_name": "Raita",
+    "short_description": "A classic Raita dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 19.2, 'carbohydrates_g': 35.0, 'fats_g': 21.9, 'main_ingredients': ['garam masala', 'potatoes', 'flour']}",
+    "total_calories": 413
+  },
+  {
+    "dish_name": "Lassi (Sweet)",
+    "short_description": "A classic Lassi (Sweet) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'coconut-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 37.1, 'carbohydrates_g': 44.3, 'fats_g': 29.7, 'main_ingredients': ['chili', 'coconut milk', 'cumin', 'onions', 'cream']}",
+    "total_calories": 592
+  },
+  {
+    "dish_name": "Saag Gosht",
+    "short_description": "A classic Saag Gosht dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'spinach-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 22.8, 'carbohydrates_g': 66.4, 'fats_g': 24.2, 'main_ingredients': ['coconut milk', 'peas', 'oil', 'turmeric', 'cumin']}",
+    "total_calories": 574
+  },
+  {
+    "dish_name": "Kheer",
+    "short_description": "A classic Kheer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'coconut-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 31.8, 'carbohydrates_g': 33.7, 'fats_g': 19.4, 'main_ingredients': ['coriander', 'ginger', 'garlic', 'cumin', 'spinach', 'peas']}",
+    "total_calories": 436
+  },
+  {
+    "dish_name": "Pani Puri",
+    "short_description": "A classic Pani Puri dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'spinach-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 33.7, 'carbohydrates_g': 30.9, 'fats_g': 13.4, 'main_ingredients': ['spinach', 'tomatoes', 'cream']}",
+    "total_calories": 379
+  },
+  {
+    "dish_name": "Saag Gosht",
+    "short_description": "A classic Saag Gosht dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'coconut-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 20.3, 'carbohydrates_g': 39.3, 'fats_g': 29.5, 'main_ingredients': ['chili', 'coconut milk', 'flour', 'oil', 'peas']}",
+    "total_calories": 503
+  },
+  {
+    "dish_name": "Fish Curry",
+    "short_description": "A classic Fish Curry dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'tomato-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 37.5, 'carbohydrates_g': 35.2, 'fats_g': 34.4, 'main_ingredients': ['flour', 'potatoes', 'rice', 'ginger', 'chili', 'yogurt']}",
+    "total_calories": 600
+  },
+  {
+    "dish_name": "Malai Kofta",
+    "short_description": "A classic Malai Kofta dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 32.4, 'carbohydrates_g': 62.1, 'fats_g': 17.3, 'main_ingredients': ['coriander', 'peas', 'cauliflower']}",
+    "total_calories": 533
+  },
+  {
+    "dish_name": "Baingan Bharta",
+    "short_description": "A classic Baingan Bharta dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'coconut-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 31.3, 'carbohydrates_g': 59.4, 'fats_g': 13.9, 'main_ingredients': ['flour', 'turmeric', 'coconut milk', 'oil']}",
+    "total_calories": 487
+  },
+  {
+    "dish_name": "Papadum",
+    "short_description": "A classic Papadum dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'tomato-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 30.6, 'carbohydrates_g': 48.1, 'fats_g': 32.5, 'main_ingredients': ['yogurt', 'garlic', 'tomatoes']}",
+    "total_calories": 607
+  },
+  {
+    "dish_name": "Dhokla",
+    "short_description": "A classic Dhokla dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'cream-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 19.1, 'carbohydrates_g': 67.9, 'fats_g': 32.6, 'main_ingredients': ['cumin', 'tomatoes', 'flour', 'spinach', 'yogurt', 'peas']}",
+    "total_calories": 641
+  },
+  {
+    "dish_name": "Butter Chicken",
+    "short_description": "A classic Butter Chicken dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'tomato-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 18.6, 'carbohydrates_g': 53.0, 'fats_g': 29.3, 'main_ingredients': ['chili', 'garlic', 'garam masala', 'coriander']}",
+    "total_calories": 550
+  },
+  {
+    "dish_name": "Dhokla",
+    "short_description": "A classic Dhokla dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'cream-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 24.4, 'carbohydrates_g': 62.8, 'fats_g': 11.8, 'main_ingredients': ['oil', 'cumin', 'flour', 'turmeric', 'garam masala']}",
+    "total_calories": 454
+  },
+  {
+    "dish_name": "Vada Pav",
+    "short_description": "A classic Vada Pav dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'spinach-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 25.6, 'carbohydrates_g': 58.6, 'fats_g': 17.4, 'main_ingredients': ['yogurt', 'ginger', 'chili']}",
+    "total_calories": 493
+  },
+  {
+    "dish_name": "Fish Curry",
+    "short_description": "A classic Fish Curry dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'yogurt-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 18.1, 'carbohydrates_g': 67.6, 'fats_g': 15.5, 'main_ingredients': ['ginger', 'yogurt', 'chili']}",
+    "total_calories": 482
+  },
+  {
+    "dish_name": "Palak Paneer",
+    "short_description": "A classic Palak Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'vegetables', 'sauce_base': 'coconut-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 32.6, 'carbohydrates_g': 48.5, 'fats_g': 19.5, 'main_ingredients': ['cream', 'oil', 'ginger']}",
+    "total_calories": 499
+  },
+  {
+    "dish_name": "Fish Curry",
+    "short_description": "A classic Fish Curry dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'cream-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 29.9, 'carbohydrates_g': 51.8, 'fats_g': 21.2, 'main_ingredients': ['peas', 'ginger', 'tomatoes', 'garam masala']}",
+    "total_calories": 517
+  },
+  {
+    "dish_name": "Butter Chicken",
+    "short_description": "A classic Butter Chicken dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'coconut-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 37.7, 'carbohydrates_g': 66.1, 'fats_g': 18.7, 'main_ingredients': ['cream', 'cauliflower', 'cumin', 'potatoes', 'coconut milk', 'oil']}",
+    "total_calories": 583
+  },
+  {
+    "dish_name": "Garlic Naan",
+    "short_description": "A classic Garlic Naan dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 26.2, 'carbohydrates_g': 33.0, 'fats_g': 21.8, 'main_ingredients': ['spinach', 'onions', 'yogurt', 'flour', 'turmeric']}",
+    "total_calories": 433
+  },
+  {
+    "dish_name": "Jeera Rice",
+    "short_description": "A classic Jeera Rice dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'tomato-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 37.5, 'carbohydrates_g': 57.6, 'fats_g': 19.9, 'main_ingredients': ['cream', 'cauliflower', 'flour', 'oil', 'cumin']}",
+    "total_calories": 559
+  },
+  {
+    "dish_name": "Kheer",
+    "short_description": "A classic Kheer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'yogurt-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 33.9, 'carbohydrates_g': 50.5, 'fats_g': 24.0, 'main_ingredients': ['cauliflower', 'peas', 'potatoes', 'chili', 'cumin']}",
+    "total_calories": 553
+  },
+  {
+    "dish_name": "Chole Bhature",
+    "short_description": "A classic Chole Bhature dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'cream-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 26.0, 'carbohydrates_g': 61.4, 'fats_g': 34.2, 'main_ingredients': ['cream', 'garlic', 'tomatoes', 'flour', 'peas']}",
+    "total_calories": 657
+  },
+  {
+    "dish_name": "Vegetable Korma",
+    "short_description": "A classic Vegetable Korma dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'cream-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 27.0, 'carbohydrates_g': 59.0, 'fats_g': 31.9, 'main_ingredients': ['flour', 'spinach', 'rice']}",
+    "total_calories": 631
+  },
+  {
+    "dish_name": "Rajma Chawal",
+    "short_description": "A classic Rajma Chawal dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'yogurt-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 35.1, 'carbohydrates_g': 44.6, 'fats_g': 28.2, 'main_ingredients': ['peas', 'chili', 'potatoes', 'onions']}",
+    "total_calories": 572
+  },
+  {
+    "dish_name": "Saag Gosht",
+    "short_description": "A classic Saag Gosht dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'coconut-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 34.1, 'carbohydrates_g': 50.4, 'fats_g': 26.2, 'main_ingredients': ['ghee', 'ginger', 'oil']}",
+    "total_calories": 573
+  },
+  {
+    "dish_name": "Butter Chicken",
+    "short_description": "A classic Butter Chicken dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'spinach-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 15.5, 'carbohydrates_g': 42.6, 'fats_g': 18.0, 'main_ingredients': ['ghee', 'tomatoes', 'cumin', 'flour', 'turmeric', 'chili']}",
+    "total_calories": 394
+  },
+  {
+    "dish_name": "Papadum",
+    "short_description": "A classic Papadum dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 25.8, 'carbohydrates_g': 52.8, 'fats_g': 24.9, 'main_ingredients': ['garam masala', 'cream', 'spinach']}",
+    "total_calories": 538
+  },
+  {
+    "dish_name": "Mango Lassi",
+    "short_description": "A classic Mango Lassi dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'spinach-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 19.3, 'carbohydrates_g': 45.0, 'fats_g': 19.2, 'main_ingredients': ['turmeric', 'potatoes', 'onions']}",
+    "total_calories": 430
+  },
+  {
+    "dish_name": "Chicken Tikka Masala",
+    "short_description": "A classic Chicken Tikka Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'cream-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 17.2, 'carbohydrates_g': 50.7, 'fats_g': 25.4, 'main_ingredients': ['turmeric', 'peas', 'rice', 'coriander', 'onions']}",
+    "total_calories": 500
+  },
+  {
+    "dish_name": "Prawn Masala",
+    "short_description": "A classic Prawn Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'spinach-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 28.5, 'carbohydrates_g': 39.3, 'fats_g': 14.0, 'main_ingredients': ['ghee', 'onions', 'ginger', 'coriander', 'turmeric', 'rice']}",
+    "total_calories": 397
+  },
+  {
+    "dish_name": "Bhindi Masala",
+    "short_description": "A classic Bhindi Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'spinach-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 20.4, 'carbohydrates_g': 53.5, 'fats_g': 20.6, 'main_ingredients': ['spinach', 'chili', 'yogurt', 'rice', 'cream', 'tomatoes']}",
+    "total_calories": 481
+  },
+  {
+    "dish_name": "Mutter Paneer",
+    "short_description": "A classic Mutter Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'spinach-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 27.8, 'carbohydrates_g': 47.2, 'fats_g': 25.2, 'main_ingredients': ['turmeric', 'garlic', 'ghee', 'flour', 'garam masala', 'spinach']}",
+    "total_calories": 526
+  },
+  {
+    "dish_name": "Rogan Josh",
+    "short_description": "A classic Rogan Josh dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'coconut-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 26.9, 'carbohydrates_g': 37.9, 'fats_g': 10.4, 'main_ingredients': ['garlic', 'garam masala', 'yogurt', 'potatoes']}",
+    "total_calories": 352
+  },
+  {
+    "dish_name": "Kadhai Paneer",
+    "short_description": "A classic Kadhai Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'yogurt-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 26.3, 'carbohydrates_g': 55.3, 'fats_g': 31.4, 'main_ingredients': ['ghee', 'garam masala', 'garlic']}",
+    "total_calories": 609
+  },
+  {
+    "dish_name": "Gulab Jamun",
+    "short_description": "A classic Gulab Jamun dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'coconut-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 34.8, 'carbohydrates_g': 40.4, 'fats_g': 18.1, 'main_ingredients': ['spinach', 'turmeric', 'yogurt', 'cauliflower']}",
+    "total_calories": 463
+  },
+  {
+    "dish_name": "Gulab Jamun",
+    "short_description": "A classic Gulab Jamun dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'cream-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 25.3, 'carbohydrates_g': 36.6, 'fats_g': 17.8, 'main_ingredients': ['garlic', 'yogurt', 'ghee', 'cumin', 'tomatoes', 'rice']}",
+    "total_calories": 407
+  },
+  {
+    "dish_name": "Tandoori Roti",
+    "short_description": "A classic Tandoori Roti dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'spinach-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 33.8, 'carbohydrates_g': 53.1, 'fats_g': 16.2, 'main_ingredients': ['peas', 'oil', 'tomatoes', 'onions']}",
+    "total_calories": 493
+  },
+  {
+    "dish_name": "Mutter Paneer",
+    "short_description": "A classic Mutter Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'coconut-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 16.2, 'carbohydrates_g': 43.0, 'fats_g': 31.5, 'main_ingredients': ['yogurt', 'ghee', 'tomatoes', 'potatoes', 'peas', 'onions']}",
+    "total_calories": 520
+  },
+  {
+    "dish_name": "Fish Curry",
+    "short_description": "A classic Fish Curry dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'coconut-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 15.4, 'carbohydrates_g': 32.1, 'fats_g': 22.8, 'main_ingredients': ['onions', 'chili', 'yogurt', 'oil']}",
+    "total_calories": 395
+  },
+  {
+    "dish_name": "Dal Makhani",
+    "short_description": "A classic Dal Makhani dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'spinach-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 39.1, 'carbohydrates_g': 54.8, 'fats_g': 27.9, 'main_ingredients': ['chili', 'coriander', 'ghee', 'garlic']}",
+    "total_calories": 626
+  },
+  {
+    "dish_name": "Bhindi Masala",
+    "short_description": "A classic Bhindi Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'vegetables', 'sauce_base': 'coconut-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 19.4, 'carbohydrates_g': 65.9, 'fats_g': 14.5, 'main_ingredients': ['flour', 'ginger', 'garlic', 'oil', 'turmeric', 'potatoes']}",
+    "total_calories": 471
+  },
+  {
+    "dish_name": "Pulao",
+    "short_description": "A classic Pulao dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'tomato-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 28.6, 'carbohydrates_g': 32.5, 'fats_g': 28.8, 'main_ingredients': ['rice', 'ginger', 'cumin', 'turmeric', 'garam masala']}",
+    "total_calories": 503
+  },
+  {
+    "dish_name": "Chicken Tikka Masala",
+    "short_description": "A classic Chicken Tikka Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'tomato-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 26.4, 'carbohydrates_g': 33.0, 'fats_g': 22.1, 'main_ingredients': ['rice', 'coconut milk', 'cumin', 'chili', 'garam masala']}",
+    "total_calories": 436
+  },
+  {
+    "dish_name": "Lamb Vindaloo",
+    "short_description": "A classic Lamb Vindaloo dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'vegetables', 'sauce_base': 'cream-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 15.8, 'carbohydrates_g': 51.5, 'fats_g': 32.2, 'main_ingredients': ['spinach', 'oil', 'ginger', 'cumin']}",
+    "total_calories": 559
+  },
+  {
+    "dish_name": "Chicken Korma",
+    "short_description": "A classic Chicken Korma dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 24.4, 'carbohydrates_g': 55.0, 'fats_g': 14.5, 'main_ingredients': ['oil', 'ghee', 'flour', 'cauliflower']}",
+    "total_calories": 448
+  },
+  {
+    "dish_name": "Biryani (Chicken)",
+    "short_description": "A classic Biryani (Chicken) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'spinach-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 37.9, 'carbohydrates_g': 48.0, 'fats_g': 29.4, 'main_ingredients': ['cauliflower', 'garam masala', 'rice', 'oil', 'cream']}",
+    "total_calories": 608
+  },
+  {
+    "dish_name": "Gulab Jamun",
+    "short_description": "A classic Gulab Jamun dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'spinach-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 21.9, 'carbohydrates_g': 55.3, 'fats_g': 34.7, 'main_ingredients': ['rice', 'yogurt', 'cream', 'chili']}",
+    "total_calories": 621
+  },
+  {
+    "dish_name": "Dal Makhani",
+    "short_description": "A classic Dal Makhani dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'vegetables', 'sauce_base': 'tomato-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 36.3, 'carbohydrates_g': 44.3, 'fats_g': 15.2, 'main_ingredients': ['garam masala', 'cumin', 'rice', 'cream', 'ginger']}",
+    "total_calories": 459
+  },
+  {
+    "dish_name": "Tandoori Roti",
+    "short_description": "A classic Tandoori Roti dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'vegetables', 'sauce_base': 'spinach-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 21.9, 'carbohydrates_g': 57.5, 'fats_g': 11.3, 'main_ingredients': ['onions', 'tomatoes', 'garam masala']}",
+    "total_calories": 419
+  },
+  {
+    "dish_name": "Palak Paneer",
+    "short_description": "A classic Palak Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'tomato-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 18.1, 'carbohydrates_g': 64.7, 'fats_g': 29.7, 'main_ingredients': ['cumin', 'tomatoes', 'potatoes']}",
+    "total_calories": 598
+  },
+  {
+    "dish_name": "Rajma Chawal",
+    "short_description": "A classic Rajma Chawal dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'vegetables', 'sauce_base': 'tomato-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 28.7, 'carbohydrates_g': 57.4, 'fats_g': 28.4, 'main_ingredients': ['onions', 'potatoes', 'chili', 'spinach', 'peas', 'garlic']}",
+    "total_calories": 600
+  },
+  {
+    "dish_name": "Kadhai Paneer",
+    "short_description": "A classic Kadhai Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'tomato-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 36.1, 'carbohydrates_g': 54.5, 'fats_g': 14.5, 'main_ingredients': ['ghee', 'flour', 'tomatoes', 'oil', 'coriander', 'ginger']}",
+    "total_calories": 492
+  },
+  {
+    "dish_name": "Lassi (Sweet)",
+    "short_description": "A classic Lassi (Sweet) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'tomato-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 38.5, 'carbohydrates_g': 41.7, 'fats_g': 28.3, 'main_ingredients': ['coriander', 'potatoes', 'chili', 'cream', 'ghee', 'ginger']}",
+    "total_calories": 575
+  },
+  {
+    "dish_name": "Biryani (Vegetable)",
+    "short_description": "A classic Biryani (Vegetable) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'cream-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 30.5, 'carbohydrates_g': 43.5, 'fats_g': 25.8, 'main_ingredients': ['yogurt', 'garam masala', 'cumin', 'ginger', 'coriander']}",
+    "total_calories": 528
+  },
+  {
+    "dish_name": "Masala Dosa",
+    "short_description": "A classic Masala Dosa dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 37.1, 'carbohydrates_g': 56.2, 'fats_g': 28.1, 'main_ingredients': ['cream', 'coconut milk', 'tomatoes', 'cauliflower']}",
+    "total_calories": 626
+  },
+  {
+    "dish_name": "Masala Dosa",
+    "short_description": "A classic Masala Dosa dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'spinach-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 15.3, 'carbohydrates_g': 52.4, 'fats_g': 21.2, 'main_ingredients': ['ghee', 'coriander', 'flour', 'cauliflower', 'cream', 'cumin']}",
+    "total_calories": 461
+  },
+  {
+    "dish_name": "Saag Gosht",
+    "short_description": "A classic Saag Gosht dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'cream-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 22.9, 'carbohydrates_g': 30.3, 'fats_g': 16.5, 'main_ingredients': ['cauliflower', 'ghee', 'potatoes']}",
+    "total_calories": 361
+  },
+  {
+    "dish_name": "Kheer",
+    "short_description": "A classic Kheer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'coconut-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 27.6, 'carbohydrates_g': 49.4, 'fats_g': 10.3, 'main_ingredients': ['oil', 'potatoes', 'ghee', 'garam masala']}",
+    "total_calories": 400
+  },
+  {
+    "dish_name": "Mutter Paneer",
+    "short_description": "A classic Mutter Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'coconut-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 24.3, 'carbohydrates_g': 68.0, 'fats_g': 19.2, 'main_ingredients': ['yogurt', 'coconut milk', 'ghee', 'chili']}",
+    "total_calories": 542
+  },
+  {
+    "dish_name": "Tandoori Roti",
+    "short_description": "A classic Tandoori Roti dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'yogurt-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 28.9, 'carbohydrates_g': 50.1, 'fats_g': 24.0, 'main_ingredients': ['ghee', 'garlic', 'yogurt', 'rice', 'cumin']}",
+    "total_calories": 532
+  },
+  {
+    "dish_name": "Bhindi Masala",
+    "short_description": "A classic Bhindi Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'coconut-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 35.9, 'carbohydrates_g': 69.4, 'fats_g': 27.8, 'main_ingredients': ['cumin', 'yogurt', 'ghee', 'garlic', 'potatoes']}",
+    "total_calories": 671
+  },
+  {
+    "dish_name": "Dal Makhani",
+    "short_description": "A classic Dal Makhani dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'yogurt-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 18.1, 'carbohydrates_g': 66.4, 'fats_g': 22.8, 'main_ingredients': ['peas', 'oil', 'coconut milk', 'garam masala', 'yogurt']}",
+    "total_calories": 543
+  },
+  {
+    "dish_name": "Biryani (Vegetable)",
+    "short_description": "A classic Biryani (Vegetable) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'cream-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 18.4, 'carbohydrates_g': 45.9, 'fats_g': 10.8, 'main_ingredients': ['coconut milk', 'garam masala', 'spinach', 'cumin']}",
+    "total_calories": 354
+  },
+  {
+    "dish_name": "Dhokla",
+    "short_description": "A classic Dhokla dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'cream-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 25.2, 'carbohydrates_g': 61.8, 'fats_g': 22.2, 'main_ingredients': ['cauliflower', 'cream', 'yogurt', 'spinach']}",
+    "total_calories": 547
+  },
+  {
+    "dish_name": "Vada Pav",
+    "short_description": "A classic Vada Pav dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'cream-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 18.8, 'carbohydrates_g': 38.4, 'fats_g': 13.2, 'main_ingredients': ['coriander', 'cream', 'chili', 'potatoes', 'turmeric']}",
+    "total_calories": 347
+  },
+  {
+    "dish_name": "Chicken Korma",
+    "short_description": "A classic Chicken Korma dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'spinach-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 36.8, 'carbohydrates_g': 40.3, 'fats_g': 12.6, 'main_ingredients': ['coriander', 'cumin', 'ghee']}",
+    "total_calories": 421
+  },
+  {
+    "dish_name": "Prawn Masala",
+    "short_description": "A classic Prawn Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 21.7, 'carbohydrates_g': 35.9, 'fats_g': 12.4, 'main_ingredients': ['spinach', 'cream', 'coriander', 'cauliflower']}",
+    "total_calories": 342
+  },
+  {
+    "dish_name": "Lassi (Salted)",
+    "short_description": "A classic Lassi (Salted) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'spinach-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 33.0, 'carbohydrates_g': 55.6, 'fats_g': 18.7, 'main_ingredients': ['ginger', 'peas', 'flour']}",
+    "total_calories": 522
+  },
+  {
+    "dish_name": "Aloo Gobi",
+    "short_description": "A classic Aloo Gobi dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'spinach-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 30.3, 'carbohydrates_g': 68.8, 'fats_g': 14.7, 'main_ingredients': ['tomatoes', 'onions', 'rice', 'cream', 'ginger']}",
+    "total_calories": 528
+  },
+  {
+    "dish_name": "Tandoori Roti",
+    "short_description": "A classic Tandoori Roti dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'cream-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 19.6, 'carbohydrates_g': 56.1, 'fats_g': 34.2, 'main_ingredients': ['ginger', 'cauliflower', 'rice', 'potatoes', 'garlic']}",
+    "total_calories": 610
+  },
+  {
+    "dish_name": "Jeera Rice",
+    "short_description": "A classic Jeera Rice dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'tomato-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 37.5, 'carbohydrates_g': 60.5, 'fats_g': 18.7, 'main_ingredients': ['ginger', 'garlic', 'cream', 'flour', 'coconut milk']}",
+    "total_calories": 560
+  },
+  {
+    "dish_name": "Mutter Paneer",
+    "short_description": "A classic Mutter Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'spinach-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 29.0, 'carbohydrates_g': 50.6, 'fats_g': 22.5, 'main_ingredients': ['spinach', 'cream', 'garam masala', 'tomatoes', 'yogurt', 'coriander']}",
+    "total_calories": 520
+  },
+  {
+    "dish_name": "Palak Paneer",
+    "short_description": "A classic Palak Paneer dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'cream-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 34.0, 'carbohydrates_g': 39.0, 'fats_g': 31.4, 'main_ingredients': ['rice', 'coriander', 'chili', 'garlic', 'flour']}",
+    "total_calories": 574
+  },
+  {
+    "dish_name": "Chole Bhature",
+    "short_description": "A classic Chole Bhature dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'tomato-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 29.4, 'carbohydrates_g': 37.9, 'fats_g': 32.1, 'main_ingredients': ['potatoes', 'peas', 'oil', 'chili', 'garlic']}",
+    "total_calories": 558
+  },
+  {
+    "dish_name": "Gulab Jamun",
+    "short_description": "A classic Gulab Jamun dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'yogurt-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 27.5, 'carbohydrates_g': 51.2, 'fats_g': 28.8, 'main_ingredients': ['garlic', 'cumin', 'garam masala']}",
+    "total_calories": 574
+  },
+  {
+    "dish_name": "Jalebi",
+    "short_description": "A classic Jalebi dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'vegetables', 'sauce_base': 'yogurt-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 22.9, 'carbohydrates_g': 41.0, 'fats_g': 27.9, 'main_ingredients': ['cauliflower', 'ghee', 'peas']}",
+    "total_calories": 506
+  },
+  {
+    "dish_name": "Pani Puri",
+    "short_description": "A classic Pani Puri dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'coconut-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 22.5, 'carbohydrates_g': 46.5, 'fats_g': 17.6, 'main_ingredients': ['ginger', 'cauliflower', 'oil', 'chili']}",
+    "total_calories": 434
+  },
+  {
+    "dish_name": "Fish Curry",
+    "short_description": "A classic Fish Curry dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'cream-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 38.5, 'carbohydrates_g': 55.1, 'fats_g': 34.0, 'main_ingredients': ['coriander', 'yogurt', 'cumin', 'rice', 'oil', 'spinach']}",
+    "total_calories": 680
+  },
+  {
+    "dish_name": "Lamb Vindaloo",
+    "short_description": "A classic Lamb Vindaloo dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'cream-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 25.9, 'carbohydrates_g': 47.6, 'fats_g': 24.8, 'main_ingredients': ['cauliflower', 'rice', 'peas']}",
+    "total_calories": 517
+  },
+  {
+    "dish_name": "Dhokla",
+    "short_description": "A classic Dhokla dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'cream-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 20.2, 'carbohydrates_g': 34.8, 'fats_g': 31.9, 'main_ingredients': ['peas', 'garlic', 'potatoes', 'coconut milk', 'tomatoes', 'ghee']}",
+    "total_calories": 507
+  },
+  {
+    "dish_name": "Biryani (Vegetable)",
+    "short_description": "A classic Biryani (Vegetable) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'spinach-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 22.1, 'carbohydrates_g': 57.1, 'fats_g': 34.7, 'main_ingredients': ['cauliflower', 'yogurt', 'rice', 'coriander', 'oil']}",
+    "total_calories": 629
+  },
+  {
+    "dish_name": "Lassi (Sweet)",
+    "short_description": "A classic Lassi (Sweet) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'prawns', 'sauce_base': 'tomato-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 21.1, 'carbohydrates_g': 52.6, 'fats_g': 27.1, 'main_ingredients': ['ghee', 'turmeric', 'ginger', 'chili', 'cream']}",
+    "total_calories": 538
+  },
+  {
+    "dish_name": "Lamb Vindaloo",
+    "short_description": "A classic Lamb Vindaloo dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lamb', 'sauce_base': 'cream-based', 'spice_level': 'medium'}",
+    "ingredient_details": "{'protein_g': 34.3, 'carbohydrates_g': 61.5, 'fats_g': 31.1, 'main_ingredients': ['yogurt', 'cream', 'oil', 'cumin', 'peas']}",
+    "total_calories": 663
+  },
+  {
+    "dish_name": "Chicken Korma",
+    "short_description": "A classic Chicken Korma dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'lentils', 'sauce_base': 'coconut-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 32.7, 'carbohydrates_g': 39.0, 'fats_g': 14.5, 'main_ingredients': ['yogurt', 'chili', 'potatoes']}",
+    "total_calories": 417
+  },
+  {
+    "dish_name": "Masala Dosa",
+    "short_description": "A classic Masala Dosa dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'fish', 'sauce_base': 'tomato-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 34.5, 'carbohydrates_g': 34.0, 'fats_g': 24.0, 'main_ingredients': ['onions', 'tomatoes', 'chili']}",
+    "total_calories": 490
+  },
+  {
+    "dish_name": "Prawn Masala",
+    "short_description": "A classic Prawn Masala dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'chicken', 'sauce_base': 'tomato-based', 'spice_level': 'very spicy'}",
+    "ingredient_details": "{'protein_g': 38.7, 'carbohydrates_g': 61.0, 'fats_g': 17.2, 'main_ingredients': ['peas', 'cumin', 'spinach', 'onions', 'oil', 'ginger']}",
+    "total_calories": 553
+  },
+  {
+    "dish_name": "Rajma Chawal",
+    "short_description": "A classic Rajma Chawal dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'tomato-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 23.3, 'carbohydrates_g': 66.4, 'fats_g': 18.7, 'main_ingredients': ['garlic', 'cauliflower', 'ginger', 'coriander', 'potatoes', 'yogurt']}",
+    "total_calories": 527
+  },
+  {
+    "dish_name": "Aloo Gobi",
+    "short_description": "A classic Aloo Gobi dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'paneer', 'sauce_base': 'yogurt-based', 'spice_level': 'spicy'}",
+    "ingredient_details": "{'protein_g': 38.4, 'carbohydrates_g': 68.2, 'fats_g': 14.9, 'main_ingredients': ['cream', 'onions', 'oil']}",
+    "total_calories": 560
+  },
+  {
+    "dish_name": "Vegetable Korma",
+    "short_description": "A classic Vegetable Korma dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
+    "component_details": "{'main_protein': 'vegetables', 'sauce_base': 'spinach-based', 'spice_level': 'mild'}",
+    "ingredient_details": "{'protein_g': 32.6, 'carbohydrates_g': 55.2, 'fats_g': 13.2, 'main_ingredients': ['yogurt', 'cauliflower', 'ghee', 'peas', 'cumin']}",
+    "total_calories": 470
+  }
+]
