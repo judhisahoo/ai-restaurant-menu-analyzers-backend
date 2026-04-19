@@ -2,7 +2,15 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 
+type ConfigSnapshotRow = {
+  id: number;
+  name: string;
+  value: string;
+  status: boolean;
+};
+
 export interface DatabaseSnapshot {
+  config: ConfigSnapshotRow[];
   users: Array<{
     id: number;
     email: string;
@@ -60,6 +68,7 @@ export interface DatabaseSnapshot {
 }
 
 export const EMPTY_SNAPSHOT: DatabaseSnapshot = {
+  config: [],
   users: [],
   location_history: [],
   menu_items: [],
@@ -93,6 +102,7 @@ export async function exportDatabaseSnapshot(
   prisma: PrismaClient,
 ): Promise<DatabaseSnapshot> {
   const [
+    config,
     users,
     locations,
     menuItems,
@@ -101,6 +111,11 @@ export async function exportDatabaseSnapshot(
     itemComponents,
     ingredientDetails,
   ] = await Promise.all([
+    prisma.$queryRaw<ConfigSnapshotRow[]>`
+      SELECT "id", "name", "value", "status"
+      FROM "config"
+      ORDER BY "id" ASC
+    `,
     prisma.user.findMany({ orderBy: { id: 'asc' } }),
     prisma.locationHistory.findMany({ orderBy: { id: 'asc' } }),
     prisma.menuItem.findMany({ orderBy: { name: 'asc' } }),
@@ -115,6 +130,12 @@ export async function exportDatabaseSnapshot(
   ]);
 
   return {
+    config: config.map((entry) => ({
+      id: entry.id,
+      name: entry.name,
+      value: entry.value,
+      status: entry.status,
+    })),
     users: users.map((user) => ({
       id: user.id,
       email: user.email,
@@ -179,6 +200,7 @@ export async function importDatabaseSnapshot(
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
     if (replaceExisting) {
+      await tx.$executeRaw`DELETE FROM "config"`;
       await tx.ingredientDetail.deleteMany();
       await tx.itemComponent.deleteMany();
       await tx.menuScan.deleteMany();
@@ -186,6 +208,15 @@ export async function importDatabaseSnapshot(
       await tx.locationHistory.deleteMany();
       await tx.menuItem.deleteMany();
       await tx.user.deleteMany();
+    }
+
+    if (snapshot.config.length > 0) {
+      for (const entry of snapshot.config) {
+        await tx.$executeRaw`
+          INSERT INTO "config" ("id", "name", "value", "status")
+          VALUES (${entry.id}, ${entry.name}, ${entry.value}, ${entry.status})
+        `;
+      }
     }
 
     if (snapshot.users.length > 0) {
@@ -278,6 +309,7 @@ export async function importDatabaseSnapshot(
     }
   });
 
+  await resetSequence(prisma, 'config', 'id');
   await resetSequence(prisma, '"user"', 'id');
   await resetSequence(prisma, 'location_history', 'id');
   await resetSequence(prisma, 'menu_scans', 'id');

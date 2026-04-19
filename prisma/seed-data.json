@@ -1,4 +1,12 @@
 {
+  "config": [
+    {
+      "id": 1,
+      "name": "menu_scan_ai_provider",
+      "value": "gemini",
+      "status": true
+    }
+  ],
   "users": [],
   "location_history": [],
   "menu_items": [],

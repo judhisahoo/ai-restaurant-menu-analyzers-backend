@@ -5,7 +5,10 @@ import { persistUploadedImage } from '../common/utils/image-storage.util';
 import { generateId } from '../common/utils/id.util';
 import { PrismaService } from '../database/prisma.service';
 import { UserService } from '../user/user.service';
-import { GeminiService } from '../common/gemini/gemini.service';
+import {
+  AiService,
+  type MenuScanProcessingMode,
+} from '../common/ai/ai.service';
 import { DishDto } from './dto/dish-analysis.dto';
 
 type FakeDishRow = {
@@ -20,7 +23,7 @@ export class MenuScansService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userService: UserService,
-    private readonly geminiService: GeminiService,
+    private readonly aiService: AiService,
   ) {}
 
   async create(
@@ -78,16 +81,22 @@ export class MenuScansService {
         dishes,
       },
     };
+    
   }
 
   private async process_ai_for_dis_data(
     userId: number,
     imageUrl: string,
   ): Promise<DishDto[]> {
-    console.log('now at process_ai_for_dis_data() for processing dish data from menu scan image using Gemini API or fake data based on configuration settings');
-    const extractedDishes = this.isOnlineProcessingEnabled()
-      ? await this.geminiService.analyzeMenuImage(imageUrl)
-      : await this.readFakeDishData();
+    console.log('now at process_ai_for_dis_data() for processing dish data from menu scan image using the configured AI provider or fake data based on database settings');
+    const processingMode =
+      await this.aiService.resolveMenuScanProcessingMode();
+    console.log('Resolved menu scan AI processing mode:', processingMode);
+
+    const extractedDishes = await this.getDishDataForProcessingMode(
+      imageUrl,
+      processingMode,
+    );
 
     const dishesWithImages =
       await this.get_dish_image_by_dish_name(extractedDishes);
@@ -108,10 +117,15 @@ export class MenuScansService {
     return dishesWithImages;
   }
 
-  private isOnlineProcessingEnabled(): boolean {
-    console.log('now at isOnlineProcessingEnabled()');
-    console.log('process.env.ON_LINE_PROCESS ::',process.env.ON_LINE_PROCESS);
-    return (process.env.ON_LINE_PROCESS ?? '').trim().toLowerCase() === 'true';
+  private async getDishDataForProcessingMode(
+    imageUrl: string,
+    processingMode: MenuScanProcessingMode,
+  ): Promise<DishDto[]> {
+    if (processingMode === 'offline') {
+      return this.readFakeDishData();
+    }
+
+    return this.aiService.analyzeMenuImage(imageUrl, processingMode);
   }
 
   private async readFakeDishData(): Promise<DishDto[]> {

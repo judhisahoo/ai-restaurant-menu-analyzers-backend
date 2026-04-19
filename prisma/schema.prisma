@@ -99,3 +99,12 @@ model IngredientDetail {
   @@unique([itemId, name], map: "idx_ingredient_details_item_name")
   @@map("ingredient_details")
 }
+
+model Config {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique @db.VarChar(255)
+  value  String  @db.VarChar(255)
+  status Boolean @default(true)
+
+  @@map("config")
+}
