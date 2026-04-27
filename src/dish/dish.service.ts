@@ -11,6 +11,11 @@ type TransactionClient = Omit<PrismaClient, '$on' | '$connect' | '$disconnect' |
 
 import { generateId } from '../common/utils/id.util';
 import { persistImageValue } from '../common/utils/image-storage.util';
+import { AiService } from '../common/ai/ai.service';
+import {
+  ItemComponentReportDto,
+  ItemIngredientReportDto,
+} from '../common/ai/menu-image-analysis.util';
 import {
   assertObject,
   getArray,
@@ -28,6 +33,7 @@ export class DishService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userService: UserService,
+    private readonly aiService: AiService,
   ) {}
 
   async createItems(payload: unknown) {
@@ -158,6 +164,12 @@ export class DishService {
       },
     });
 
+    if (items.length === 0) {
+      throw new NotFoundException(
+        `Menu item "${searchTerm}" is not available yet because it has not been found in any scanned menu card.`,
+      );
+    }
+
     return {
       message: 'Dish search completed successfully.',
       data: items.map((item: { id: string; name: string; shortDescription: string; image: string | null; createdAt: Date; updatedAt: Date; }) => ({
@@ -171,28 +183,39 @@ export class DishService {
     };
   }
 
-  async getItemComponents(itemId: string) {
-    const normalizedItemId = await this.ensureItemExists(itemId);
-    const components = await this.prismaService.itemComponent.findMany({
-      where: {
-        itemId: normalizedItemId,
-      },
-      orderBy: {
-        rowOrder: 'asc',
-      },
-    });
+  async getItemComponents(itemName: string) {
+    const item = await this.getItemByNameSlug(itemName);
+    let components = await this.findItemComponents(item.id);
+
+    if (components.length === 0) {
+      const componentReport = await this.aiService.generateItemComponentReport(
+        item.normalizedName,
+      );
+
+      this.saveGeneratedItemComponentsInBackground(
+        item.id,
+        item.normalizedName,
+        componentReport,
+      );
+
+      return {
+        message: 'Item components generated successfully.',
+        data: {
+          item: {
+            item_id: item.id,
+            item_name: item.normalizedName,
+          },
+          component: componentReport.map((component) => ({
+            name: component.name,
+            detail: component.detail,
+          })),
+        },
+      };
+    }
 
     return {
       message: 'Item components fetched successfully.',
-      data: components.map((component: { id: string; itemId: string; name: string; summary: string; rowOrder: number; createdAt: Date; updatedAt: Date; }) => ({
-        id: component.id,
-        item_id: component.itemId,
-        name: component.name,
-        summary: component.summary,
-        row_order: component.rowOrder,
-        created_at: component.createdAt.toISOString(),
-        updated_at: component.updatedAt.toISOString(),
-      })),
+      data: this.formatItemComponents(components),
     };
   }
 
@@ -280,28 +303,39 @@ export class DishService {
     });
   }
 
-  async getItemIngredients(itemId: string) {
-    const normalizedItemId = await this.ensureItemExists(itemId);
-    const ingredients = await this.prismaService.ingredientDetail.findMany({
-      where: {
-        itemId: normalizedItemId,
-      },
-      orderBy: {
-        rowOrder: 'asc',
-      },
-    });
+  async getItemIngredients(itemName: string) {
+    const item = await this.getItemByNameSlug(itemName);
+    const ingredients = await this.findItemIngredients(item.id);
+
+    if (ingredients.length === 0) {
+      const ingredientReport = await this.aiService.generateItemIngredientReport(
+        item.normalizedName,
+      );
+
+      this.saveGeneratedItemIngredientsInBackground(
+        item.id,
+        item.normalizedName,
+        ingredientReport,
+      );
+
+      return {
+        message: 'Ingredient details generated successfully.',
+        data: {
+          item: {
+            item_id: item.id,
+            item_name: item.normalizedName,
+          },
+          ingredient: ingredientReport.map((ingredient) => ({
+            name: ingredient.name,
+            detail: ingredient.detail,
+          })),
+        },
+      };
+    }
 
     return {
       message: 'Ingredient details fetched successfully.',
-      data: ingredients.map((ingredient: { id: string; itemId: string; name: string; detail: string; rowOrder: number; createdAt: Date; updatedAt: Date; }) => ({
-        id: ingredient.id,
-        item_id: ingredient.itemId,
-        name: ingredient.name,
-        detail: ingredient.detail,
-        row_order: ingredient.rowOrder,
-        created_at: ingredient.createdAt.toISOString(),
-        updated_at: ingredient.updatedAt.toISOString(),
-      })),
+      data: this.formatItemIngredients(ingredients),
     };
   }
 
@@ -401,6 +435,239 @@ export class DishService {
     }
 
     return normalizedItemId;
+  }
+
+  private async getItemByNameSlug(
+    itemName: string,
+  ): Promise<{ id: string; normalizedName: string }> {
+    const normalizedItemName = this.normalizeItemNameSlug(itemName);
+    const item = await this.prismaService.menuItem.findFirst({
+      where: {
+        name: {
+          equals: normalizedItemName,
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!item) {
+      throw new NotFoundException(
+        `Menu item "${normalizedItemName}" is not available yet because it has not been found in any scanned menu card.`,
+      );
+    }
+
+    return {
+      id: item.id,
+      normalizedName: normalizedItemName,
+    };
+  }
+
+  private normalizeItemNameSlug(itemName: string): string {
+    const normalizedItemName = getRequiredIdentifier(
+      itemName,
+      'item_name',
+    )
+      .replace(/-/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    if (!normalizedItemName) {
+      throw new BadRequestException('item_name must be a non-empty string.');
+    }
+
+    return normalizedItemName;
+  }
+
+  private async findItemComponents(itemId: string) {
+    return this.prismaService.itemComponent.findMany({
+      where: {
+        itemId,
+      },
+      orderBy: {
+        rowOrder: 'asc',
+      },
+    });
+  }
+
+  private async findItemIngredients(itemId: string) {
+    return this.prismaService.ingredientDetail.findMany({
+      where: {
+        itemId,
+      },
+      orderBy: {
+        rowOrder: 'asc',
+      },
+    });
+  }
+
+  private async createGeneratedItemComponents(
+    itemId: string,
+    componentReport: ItemComponentReportDto[],
+  ): Promise<void> {
+    await this.prismaService.$transaction(async (tx: TransactionClient) => {
+      let currentOrder = await this.getNextOrderValue(
+        tx,
+        'item_components',
+        itemId,
+      );
+
+      for (const component of componentReport) {
+        const existingComponent = await tx.itemComponent.findFirst({
+          where: {
+            itemId,
+            name: {
+              equals: component.name,
+              mode: 'insensitive',
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (existingComponent) {
+          continue;
+        }
+
+        currentOrder += 1;
+        const now = new Date();
+        await tx.itemComponent.create({
+          data: {
+            id: generateId(),
+            itemId,
+            name: component.name,
+            summary: component.detail,
+            rowOrder: currentOrder,
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
+      }
+    });
+  }
+
+  private saveGeneratedItemComponentsInBackground(
+    itemId: string,
+    itemName: string,
+    componentReport: ItemComponentReportDto[],
+  ): void {
+    void this.createGeneratedItemComponents(itemId, componentReport).catch(
+      (error) => {
+        console.error(
+          `Failed to save AI-generated item components for "${itemName}".`,
+          error,
+        );
+      },
+    );
+  }
+
+  private async createGeneratedItemIngredients(
+    itemId: string,
+    ingredientReport: ItemIngredientReportDto[],
+  ): Promise<void> {
+    await this.prismaService.$transaction(async (tx: TransactionClient) => {
+      let currentOrder = await this.getNextOrderValue(
+        tx,
+        'ingredient_details',
+        itemId,
+      );
+
+      for (const ingredient of ingredientReport) {
+        const existingIngredient = await tx.ingredientDetail.findFirst({
+          where: {
+            itemId,
+            name: {
+              equals: ingredient.name,
+              mode: 'insensitive',
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (existingIngredient) {
+          continue;
+        }
+
+        currentOrder += 1;
+        const now = new Date();
+        await tx.ingredientDetail.create({
+          data: {
+            id: generateId(),
+            itemId,
+            name: ingredient.name,
+            detail: ingredient.detail,
+            rowOrder: currentOrder,
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
+      }
+    });
+  }
+
+  private saveGeneratedItemIngredientsInBackground(
+    itemId: string,
+    itemName: string,
+    ingredientReport: ItemIngredientReportDto[],
+  ): void {
+    void this.createGeneratedItemIngredients(itemId, ingredientReport).catch(
+      (error) => {
+        console.error(
+          `Failed to save AI-generated ingredient details for "${itemName}".`,
+          error,
+        );
+      },
+    );
+  }
+
+  private formatItemComponents(
+    components: Array<{
+      id: string;
+      itemId: string;
+      name: string;
+      summary: string;
+      rowOrder: number;
+      createdAt: Date;
+      updatedAt: Date;
+    }>,
+  ): Array<Record<string, unknown>> {
+    return components.map((component) => ({
+      id: component.id,
+      item_id: component.itemId,
+      name: component.name,
+      summary: component.summary,
+      row_order: component.rowOrder,
+      created_at: component.createdAt.toISOString(),
+      updated_at: component.updatedAt.toISOString(),
+    }));
+  }
+
+  private formatItemIngredients(
+    ingredients: Array<{
+      id: string;
+      itemId: string;
+      name: string;
+      detail: string;
+      rowOrder: number;
+      createdAt: Date;
+      updatedAt: Date;
+    }>,
+  ): Array<Record<string, unknown>> {
+    return ingredients.map((ingredient) => ({
+      id: ingredient.id,
+      item_id: ingredient.itemId,
+      name: ingredient.name,
+      detail: ingredient.detail,
+      row_order: ingredient.rowOrder,
+      created_at: ingredient.createdAt.toISOString(),
+      updated_at: ingredient.updatedAt.toISOString(),
+    }));
   }
 
   private async getNextOrderValue(

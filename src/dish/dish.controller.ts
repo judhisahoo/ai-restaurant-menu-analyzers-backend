@@ -128,11 +128,11 @@ export class DishController {
     return this.dishService.searchItems(payload);
   }
 
-  @Get('item-component/:itemId')
+  @Get('item-component/:itemName')
   @ApiOperation({ summary: 'Fetch components for a menu item.' })
-  @ApiParam({ name: 'itemId', example: '1' })
-  getItemComponents(@Param('itemId') itemId: string): Promise<unknown> {
-    return this.dishService.getItemComponents(itemId);
+  @ApiParam({ name: 'itemName', example: 'rava-onion-dose' })
+  getItemComponents(@Param('itemName') itemName: string): Promise<unknown> {
+    return this.dishService.getItemComponents(itemName);
   }
 
   @Post('item-component/:itemId')
@@ -160,11 +160,11 @@ export class DishController {
     return this.dishService.createItemComponents(itemId, payload);
   }
 
-  @Get('item-ingredient/:itemId')
+  @Get('item-ingredient/:itemName')
   @ApiOperation({ summary: 'Fetch ingredient details for a menu item.' })
-  @ApiParam({ name: 'itemId', example: '1' })
-  getItemIngredients(@Param('itemId') itemId: string): Promise<unknown> {
-    return this.dishService.getItemIngredients(itemId);
+  @ApiParam({ name: 'itemName', example: 'rava-onion-dose' })
+  getItemIngredients(@Param('itemName') itemName: string): Promise<unknown> {
+    return this.dishService.getItemIngredients(itemName);
   }
 
   @Post('item-ingredient/:itemId')

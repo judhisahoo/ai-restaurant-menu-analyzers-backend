@@ -1,20 +1,54 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from "@nestjs/common";
 import {
   GoogleGenerativeAI,
   SchemaType,
   type EnhancedGenerateContentResponse,
   type ResponseSchema,
-} from '@google/generative-ai';
-import { DishDto } from '../../menu-scans/dto/dish-analysis.dto';
+} from "@google/generative-ai";
+import { DishDto } from "../../menu-scans/dto/dish-analysis.dto";
 import {
-  MENU_IMAGE_ANALYSIS_PROMPT,
-  parseDishArray,
-} from '../ai/menu-image-analysis.util';
+  buildItemComponentReportPrompt,
+  buildItemIngredientReportPrompt,
+  buildSingleItemComponentSectionPrompt,
+  buildSingleItemIngredientSectionPrompt,
+  buildDishDescriptionPrompt,
+  ITEM_COMPONENT_REPORT_SECTION_NAMES,
+  ITEM_INGREDIENT_REPORT_SECTION_NAMES,
+  ItemComponentReportDto,
+  ItemIngredientReportDto,
+  MENU_DISH_NAME_EXTRACTION_PROMPT,
+  NameDetailReportDto,
+  normalizeItemComponentReportPayload,
+  normalizeItemIngredientReportPayload,
+  normalizeDishDescriptionPayload,
+  orderNameDetailReportBySections,
+  parseDishNameArray,
+} from "../ai/menu-image-analysis.util";
+
+type GeminiImagePart = {
+  inlineData: {
+    mimeType: string;
+    data: string;
+  };
+};
 
 @Injectable()
 export class GeminiService {
   private genAI: GoogleGenerativeAI | null = null;
-  private readonly dishResponseSchema: ResponseSchema = {
+  private readonly dishNameResponseSchema: ResponseSchema = {
+    type: SchemaType.ARRAY,
+    items: {
+      type: SchemaType.OBJECT,
+      properties: {
+        name: {
+          type: SchemaType.STRING,
+        },
+      },
+      required: ["name"],
+    },
+  };
+
+  private readonly dishDescriptionResponseSchema: ResponseSchema = {
     type: SchemaType.ARRAY,
     items: {
       type: SchemaType.OBJECT,
@@ -26,64 +60,298 @@ export class GeminiService {
           type: SchemaType.STRING,
         },
       },
-      required: ['name', 'short_description'],
+      required: ["name", "short_description"],
     },
   };
 
-  async analyzeMenuImage(
-    imageUrl: string,
-  ): Promise<DishDto[]> {
+  private readonly itemComponentReportResponseSchema: ResponseSchema = {
+    type: SchemaType.ARRAY,
+    items: {
+      type: SchemaType.OBJECT,
+      properties: {
+        name: {
+          type: SchemaType.STRING,
+        },
+        detail: {
+          type: SchemaType.STRING,
+        },
+      },
+      required: ["name", "detail"],
+    },
+  };
+
+  async analyzeMenuImage(imageUrl: string): Promise<DishDto[]> {
     try {
-      console.log('now at analyzeMenuImage() for analyzing menu scan image using Gemini API to extract dish data');
-      console.log('Menu image URL to analyze:', imageUrl);
-      console.log('Initializing Gemini API client and preparing prompt for menu image analysis');
-      const model = this.getClient().getGenerativeModel({
-        model: 'gemini-2.0-flash-lite',
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: this.dishResponseSchema,
-          temperature: 0.2,
-        },
-      });
+      console.log(
+        "now at analyzeMenuImage() for analyzing menu scan image using Gemini API to extract dish data",
+      );
+      console.log("Menu image URL to analyze:", imageUrl);
+      console.log(
+        "Using Gemini two-step flow: extract dish names, then generate descriptions",
+      );
 
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new BadRequestException(
-          `Failed to fetch menu image. Received ${imageResponse.status} from image URL.`,
-        );
-      }
+      const imagePart = await this.fetchImagePart(imageUrl);
+      const dishNames = await this.extractDishNames(imagePart);
+      const dishNamesLog =
+        dishNames.length > 0 ? dishNames.join(", ") : "No dish names extracted";
+      console.log(`[GEMINI] Extracted dish names: ${dishNamesLog}`);
 
-      const imageMimeType =
-        imageResponse.headers.get('content-type') ?? 'image/jpeg';
-      const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-
-      const response = await model.generateContent([
-        {
-          inlineData: {
-            mimeType: imageMimeType,
-            data: imageBuffer.toString('base64'),
-          },
-        },
-        MENU_IMAGE_ANALYSIS_PROMPT,
-      ]);
-
-      const responseText = this.extractResponseText(response.response);
-      const dishes = parseDishArray(responseText);
-
-      return dishes.map((dish) => ({
-        name: dish.name.trim(),
-        short_description: dish.short_description.trim(),
-        image: null,
-      }));
+      return await this.generateDescriptions(dishNames);
     } catch (error) {
       if (error instanceof SyntaxError) {
         throw new BadRequestException(
-          'Failed to parse Gemini response. Invalid JSON format.',
+          "Failed to parse Gemini response. Invalid JSON format.",
         );
       }
 
       throw error;
     }
+  }
+
+  async generateItemComponentReport(
+    dishName: string,
+  ): Promise<ItemComponentReportDto[]> {
+    console.log(
+      `[GEMINI] Generating item component report for "${dishName}"`,
+    );
+
+    const components = await this.requestNameDetailReport(
+      buildItemComponentReportPrompt(dishName),
+      normalizeItemComponentReportPayload,
+    );
+
+    return this.completeMissingNameDetailSections(
+      dishName,
+      components,
+      ITEM_COMPONENT_REPORT_SECTION_NAMES,
+      (sectionName) =>
+        this.requestSingleComponentSection(dishName, sectionName),
+      "component",
+    );
+  }
+
+  async generateItemIngredientReport(
+    dishName: string,
+  ): Promise<ItemIngredientReportDto[]> {
+    console.log(
+      `[GEMINI] Generating item ingredient report for "${dishName}"`,
+    );
+
+    const ingredients = await this.requestNameDetailReport(
+      buildItemIngredientReportPrompt(dishName),
+      normalizeItemIngredientReportPayload,
+    );
+
+    return this.completeMissingNameDetailSections(
+      dishName,
+      ingredients,
+      ITEM_INGREDIENT_REPORT_SECTION_NAMES,
+      (sectionName) =>
+        this.requestSingleIngredientSection(dishName, sectionName),
+      "ingredient",
+    );
+  }
+
+  private async requestSingleComponentSection(
+    dishName: string,
+    sectionName: string,
+  ): Promise<ItemComponentReportDto> {
+    const [component] = await this.requestNameDetailReport(
+      buildSingleItemComponentSectionPrompt(dishName, sectionName),
+      normalizeItemComponentReportPayload,
+    );
+
+    return {
+      name: sectionName,
+      detail:
+        component?.detail?.trim() ||
+        `${sectionName} detail for ${dishName} could not be generated.`,
+    };
+  }
+
+  private async requestSingleIngredientSection(
+    dishName: string,
+    sectionName: string,
+  ): Promise<ItemIngredientReportDto> {
+    const [ingredient] = await this.requestNameDetailReport(
+      buildSingleItemIngredientSectionPrompt(dishName, sectionName),
+      normalizeItemIngredientReportPayload,
+    );
+
+    return {
+      name: sectionName,
+      detail:
+        ingredient?.detail?.trim() ||
+        `${sectionName} detail for ${dishName} could not be generated.`,
+    };
+  }
+
+  private async requestNameDetailReport<T extends NameDetailReportDto>(
+    prompt: string,
+    normalizePayload: (parsed: unknown) => T[],
+  ): Promise<T[]> {
+    console.log(`[GEMINI] Sending request to Gemini generateContent`);
+    console.log(`[GEMINI] Model: gemini-2.0-flash-lite`);
+    console.log(`[GEMINI] prompt:`, prompt);
+
+    const model = this.getClient().getGenerativeModel({
+      model: "gemini-2.0-flash-lite",
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: this.itemComponentReportResponseSchema,
+        temperature: 0.2,
+      },
+    });
+
+    const startTime = Date.now();
+    const response = await model.generateContent([prompt]);
+    const responseTime = Date.now() - startTime;
+    console.log(`[GEMINI] Response received in ${responseTime}ms`);
+
+    const responseText = this.extractResponseText(response.response);
+    console.log(
+      `[GEMINI] Raw name/detail report response first 300 chars: ${responseText.substring(0, 300)}`,
+    );
+
+    const parsed = JSON.parse(responseText) as unknown;
+    console.log(`[GEMINI] Parsed name/detail report JSON successfully.`);
+
+    return normalizePayload(parsed);
+  }
+
+  private async completeMissingNameDetailSections<T extends NameDetailReportDto>(
+    dishName: string,
+    items: T[],
+    sectionNames: readonly string[],
+    requestSingleSection: (sectionName: string) => Promise<T>,
+    reportLabel: string,
+  ): Promise<T[]> {
+    const { orderedItems, missingSections } =
+      orderNameDetailReportBySections(items, sectionNames);
+
+    if (missingSections.length === 0) {
+      return orderedItems;
+    }
+
+    console.warn(
+      `[GEMINI] Missing ${reportLabel} sections for "${dishName}": ${missingSections.join(", ")}. Requesting them one by one...`,
+    );
+
+    const completedItemsByName = new Map(
+      orderedItems.map((item) => [item.name, item]),
+    );
+
+    for (const sectionName of missingSections) {
+      const sectionItem = await requestSingleSection(sectionName);
+      completedItemsByName.set(sectionName, sectionItem);
+    }
+
+    return sectionNames.map((sectionName) => completedItemsByName.get(sectionName)!);
+  }
+
+  private async extractDishNames(
+    imagePart: GeminiImagePart,
+  ): Promise<string[]> {
+    console.log(`[GEMINI] ========== STEP 1: EXTRACT DISH NAMES ==========`);
+
+    const model = this.getClient().getGenerativeModel({
+      model: "gemini-2.0-flash-lite",
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: this.dishNameResponseSchema,
+        temperature: 0.2,
+      },
+    });
+
+    const response = await model.generateContent([
+      imagePart,
+      MENU_DISH_NAME_EXTRACTION_PROMPT,
+    ]);
+
+    const responseText = this.extractResponseText(response.response);
+    const dishNames = parseDishNameArray(responseText);
+
+    console.log(`[GEMINI] ========== STEP 1: COMPLETE ==========\n`);
+
+    return dishNames;
+  }
+
+  private async generateDescriptions(dishNames: string[]): Promise<DishDto[]> {
+    console.log(`[GEMINI] ========== STEP 2: GENERATE DESCRIPTIONS ==========`);
+    console.log(`[GEMINI] Dish names to process:`, dishNames);
+
+    if (dishNames.length === 0) {
+      console.log(
+        `[GEMINI] No dish names provided. Skipping description generation.`,
+      );
+      return [];
+    }
+
+    const batchSize = 10;
+    const batches = this.chunkArray(dishNames, batchSize);
+    const dishes: DishDto[] = [];
+
+    for (const batch of batches) {
+      const batchResult = await this.requestDescriptionBatch(batch);
+      dishes.push(...batchResult.dishes);
+
+      for (const missingName of batchResult.missingNames) {
+        console.warn(
+          `[GEMINI] Missing description for "${missingName}" in batch response. Retrying individually...`,
+        );
+
+        const retryResult = await this.requestDescriptionBatch([missingName]);
+        if (retryResult.dishes.length > 0) {
+          dishes.push(retryResult.dishes[0]);
+        } else {
+          dishes.push(this.createFallbackDish(missingName));
+        }
+      }
+    }
+
+    console.log(`[GEMINI] ========== STEP 2: COMPLETE ==========\n`);
+
+    return dishes;
+  }
+
+  private async requestDescriptionBatch(dishNames: string[]) {
+    const model = this.getClient().getGenerativeModel({
+      model: "gemini-2.0-flash-lite",
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: this.dishDescriptionResponseSchema,
+        temperature: 0.2,
+      },
+    });
+
+    const response = await model.generateContent([
+      buildDishDescriptionPrompt(dishNames),
+    ]);
+
+    const responseText = this.extractResponseText(response.response);
+    const parsed = JSON.parse(responseText) as unknown;
+
+    return normalizeDishDescriptionPayload(parsed, dishNames);
+  }
+
+  private async fetchImagePart(imageUrl: string): Promise<GeminiImagePart> {
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new BadRequestException(
+        `Failed to fetch menu image. Received ${imageResponse.status} from image URL.`,
+      );
+    }
+
+    const imageMimeType =
+      imageResponse.headers.get("content-type") ?? "image/jpeg";
+    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+
+    return {
+      inlineData: {
+        mimeType: imageMimeType,
+        data: imageBuffer.toString("base64"),
+      },
+    };
   }
 
   private extractResponseText(
@@ -100,13 +368,15 @@ export class GeminiService {
 
     const text = (
       response.candidates?.[0]?.content?.parts
-        ?.map((part) => ('text' in part && typeof part.text === 'string' ? part.text : ''))
-        .join('\n') ?? ''
+        ?.map((part) =>
+          "text" in part && typeof part.text === "string" ? part.text : "",
+        )
+        .join("\n") ?? ""
     ).trim();
 
     if (!text) {
       throw new BadRequestException(
-        'Failed to analyze menu image. No response from Gemini.',
+        "Failed to analyze menu image. No response from Gemini.",
       );
     }
 
@@ -114,7 +384,9 @@ export class GeminiService {
   }
 
   private getClient(): GoogleGenerativeAI {
-    console.log('now at getClient() for initializing Gemini API client with API key from environment variable');
+    console.log(
+      "now at getClient() for initializing Gemini API client with API key from environment variable",
+    );
     if (this.genAI) {
       return this.genAI;
     }
@@ -122,11 +394,29 @@ export class GeminiService {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw new Error(
-        'GEMINI_API_KEY is not configured. Please add the GEMINI_API_KEY environment variable.',
+        "GEMINI_API_KEY is not configured. Please add the GEMINI_API_KEY environment variable.",
       );
     }
 
     this.genAI = new GoogleGenerativeAI(apiKey);
     return this.genAI;
+  }
+
+  private createFallbackDish(name: string): DishDto {
+    return {
+      name,
+      short_description: `${name} is a restaurant dish prepared in a familiar style, with flavors and textures suited for a satisfying meal or snack.`,
+      image: null,
+    };
+  }
+
+  private chunkArray<T>(items: T[], size: number): T[][] {
+    const chunks: T[][] = [];
+
+    for (let i = 0; i < items.length; i += size) {
+      chunks.push(items.slice(i, i + size));
+    }
+
+    return chunks;
   }
 }
