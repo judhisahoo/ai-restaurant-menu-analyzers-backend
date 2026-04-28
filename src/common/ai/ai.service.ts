@@ -22,11 +22,12 @@ type ConfigQueryRow = {
 
 @Injectable()
 export class AiService {
+  private geminiService?: GeminiService;
+  private chatgptService?: ChatgptService;
+  private ollamaService?: OllamaService;
+
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly geminiService: GeminiService,
-    private readonly chatgptService: ChatgptService,
-    private readonly ollamaService: OllamaService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -38,11 +39,11 @@ export class AiService {
 
     switch (activeProvider) {
       case 'gemini':
-        return this.geminiService.analyzeMenuImage(imageUrl);
+        return this.getGeminiService().analyzeMenuImage(imageUrl);
       case 'chatgpt':
-        return this.chatgptService.analyzeMenuImage(imageUrl);
+        return this.getChatgptService().analyzeMenuImage(imageUrl);
       case 'ollama':
-        return this.ollamaService.analyzeMenuImage(imageUrl);
+        return this.getOllamaService().analyzeMenuImage(imageUrl);
       default:
         throw new BadRequestException(
           `Unsupported AI provider "${String(activeProvider)}".`,
@@ -58,11 +59,11 @@ export class AiService {
 
     switch (activeProvider) {
       case 'gemini':
-        return this.geminiService.generateItemComponentReport(dishName);
+        return this.getGeminiService().generateItemComponentReport(dishName);
       case 'chatgpt':
-        return this.chatgptService.generateItemComponentReport(dishName);
+        return this.getChatgptService().generateItemComponentReport(dishName);
       case 'ollama':
-        return this.ollamaService.generateItemComponentReport(dishName);
+        return this.getOllamaService().generateItemComponentReport(dishName);
       default:
         throw new BadRequestException(
           `AI component generation is disabled for processing mode "${String(activeProvider)}".`,
@@ -78,11 +79,11 @@ export class AiService {
 
     switch (activeProvider) {
       case 'gemini':
-        return this.geminiService.generateItemIngredientReport(dishName);
+        return this.getGeminiService().generateItemIngredientReport(dishName);
       case 'chatgpt':
-        return this.chatgptService.generateItemIngredientReport(dishName);
+        return this.getChatgptService().generateItemIngredientReport(dishName);
       case 'ollama':
-        return this.ollamaService.generateItemIngredientReport(dishName);
+        return this.getOllamaService().generateItemIngredientReport(dishName);
       default:
         throw new BadRequestException(
           `AI ingredient generation is disabled for processing mode "${String(activeProvider)}".`,
@@ -130,5 +131,32 @@ export class AiService {
     throw new BadRequestException(
       `Unsupported value "${configEntry.value}" for config "${MENU_SCAN_AI_PROVIDER_CONFIG}". Use "gemini" or "chatgpt".`,
     );
+  }
+
+  private getGeminiService(): GeminiService {
+    if (!this.geminiService) {
+      console.log('[AI] Lazy loading GeminiService.');
+      this.geminiService = new GeminiService();
+    }
+
+    return this.geminiService;
+  }
+
+  private getChatgptService(): ChatgptService {
+    if (!this.chatgptService) {
+      console.log('[AI] Lazy loading ChatgptService.');
+      this.chatgptService = new ChatgptService();
+    }
+
+    return this.chatgptService;
+  }
+
+  private getOllamaService(): OllamaService {
+    if (!this.ollamaService) {
+      console.log('[AI] Lazy loading OllamaService.');
+      this.ollamaService = new OllamaService(this.configService);
+    }
+
+    return this.ollamaService;
   }
 }

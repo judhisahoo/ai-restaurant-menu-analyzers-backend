@@ -63,17 +63,20 @@ If you cannot identify any dishes, return an empty array: []`;
 export const MENU_DISH_NAME_EXTRACTION_PROMPT = `You are a restaurant menu text extractor.
 
 Task:
-Extract every visible dish name from this menu image.
+Read the menu image and extract the visible dish names.
 
 Rules:
-- Return dish names only.
-- One item per object.
+- Return only food dish names.
+- Scan the whole image from top to bottom and left to right across every column and section.
+- Return each unique dish name one time only.
+- If the same dish name appears multiple times, keep the first occurrence and skip the later duplicates.
+- Keep distinct variants as separate items, for example "Plain Dose" and "Masala Dose".
 - Preserve spelling exactly as seen, even if it looks unusual.
 - Do not write descriptions.
 - Do not summarize.
-- Do not skip items because they look repetitive.
-- Include duplicates only if they are separately listed menu items.
 - Ignore headings, timings, notes, and prices.
+- Stop after the unique dish names are listed. Do not repeat any name to fill the response.
+- Do not return an empty array when dish names are visible in the image.
 
 Return JSON only in this format:
 [
@@ -82,6 +85,32 @@ Return JSON only in this format:
 ]
 
 If you cannot identify any dishes, return an empty array: []`;
+
+export function buildMissingDishNameReviewPrompt(
+  existingDishNames: string[],
+): string {
+  return `You are reviewing a restaurant menu image for missed items.
+
+Task:
+Look at the whole image again and find food dish names that are visible but missing from the Existing dish names list.
+
+Existing dish names:
+${JSON.stringify(existingDishNames)}
+
+Rules:
+- Return only dish names that are clearly visible in the image and are NOT already in the Existing dish names list.
+- Scan top to bottom and left to right across every column and section.
+- Keep distinct variants as separate items, for example "Plain Dose" and "Masala Dose".
+- Ignore prices, headings, timings, and notes.
+- Do not return descriptions.
+- Do not repeat names.
+- If there are no missing dish names, return [].
+
+Return JSON only in this format:
+[
+  {"name": "Missing Dish Name"}
+]`;
+}
 
 export function buildDishDescriptionPrompt(dishNames: string[]): string {
   const inputJson = JSON.stringify(dishNames.map((name) => ({ name })));
@@ -238,13 +267,22 @@ export function parseDishNameArray(responseText: string): string[] {
 export function normalizeDishNamePayload(parsed: unknown): string[] {
   const items = Array.isArray(parsed)
     ? parsed
-    : hasDishesArray(parsed)
-      ? parsed.dishes
-      : hasNamesArray(parsed)
-        ? parsed.names
+    : getFirstArrayProperty(parsed, [
+        "dishes",
+        "names",
+        "items",
+        "menu_items",
+        "dish_names",
+        "dishNames",
+        "unique_dishes",
+        "unique_dish_names",
+        "menu_dishes",
+      ]) ??
+      (isDishNamePriceMap(parsed)
+        ? Object.keys(parsed)
         : parsed && typeof parsed === "object"
           ? [parsed]
-          : null;
+          : null);
 
   if (!items) {
     throw new BadRequestException(
@@ -253,12 +291,48 @@ export function normalizeDishNamePayload(parsed: unknown): string[] {
   }
 
   return items
-    .filter(
-      (item): item is Record<string, unknown> =>
-        !!item && typeof item === "object",
-    )
-    .map((item) => (typeof item.name === "string" ? item.name.trim() : ""))
+    .map((item) => {
+      if (typeof item === "string") {
+        return item.trim();
+      }
+
+      if (!item || typeof item !== "object") {
+        return "";
+      }
+
+      const record = item as Record<string, unknown>;
+      const name =
+        record.name ??
+        record.dish_name ??
+        record.dishName ??
+        record.dish ??
+        record.title ??
+        record.item ??
+        record.text ??
+        record.value;
+
+      return typeof name === "string" ? name.trim() : "";
+    })
     .filter((name) => name.length > 0);
+}
+
+function isDishNamePriceMap(
+  value: unknown,
+): value is Record<string, string | number> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>);
+
+  return (
+    entries.length > 0 &&
+    entries.every(
+      ([key, entryValue]) =>
+        key.trim().length > 0 &&
+        (typeof entryValue === "number" || typeof entryValue === "string"),
+    )
+  );
 }
 
 export function normalizeDishPayload(parsed: unknown): DishDto[] {
@@ -541,6 +615,25 @@ function hasIngredientsArray(
     "ingredients" in value &&
     Array.isArray(value.ingredients)
   );
+}
+
+function getFirstArrayProperty(
+  value: unknown,
+  keys: string[],
+): unknown[] | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+
+  for (const key of keys) {
+    if (Array.isArray(record[key])) {
+      return record[key];
+    }
+  }
+
+  return null;
 }
 
 function hasDishesArray(

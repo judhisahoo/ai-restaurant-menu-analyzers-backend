@@ -11,6 +11,7 @@ import {
   buildItemIngredientReportPrompt,
   buildSingleItemComponentSectionPrompt,
   buildSingleItemIngredientSectionPrompt,
+  buildMissingDishNameReviewPrompt,
   buildDishDescriptionPrompt,
   ITEM_COMPONENT_REPORT_SECTION_NAMES,
   ITEM_INGREDIENT_REPORT_SECTION_NAMES,
@@ -254,6 +255,48 @@ export class GeminiService {
   ): Promise<string[]> {
     console.log(`[GEMINI] ========== STEP 1: EXTRACT DISH NAMES ==========`);
 
+    let dishNames = await this.requestDishNamesFromImagePart(
+      imagePart,
+      MENU_DISH_NAME_EXTRACTION_PROMPT,
+    );
+
+    if (dishNames.length === 0) {
+      console.warn(
+        `[GEMINI] Dish name extraction returned an empty array. Retrying with stricter OCR instructions...`,
+      );
+
+      dishNames = await this.requestDishNamesFromImagePart(
+        imagePart,
+        `${MENU_DISH_NAME_EXTRACTION_PROMPT}
+
+IMPORTANT:
+The previous response was an empty array.
+Look again at the image text and return every readable unique food item name.
+Return [] only if there are truly no readable food item names in the image.`,
+      );
+    }
+
+    const missingDishNames = await this.requestMissingDishNamesFromImagePart(
+      imagePart,
+      dishNames,
+    );
+
+    if (missingDishNames.length > 0) {
+      console.log(
+        `[GEMINI] Additional dish names found on review: ${missingDishNames.join(", ")}`,
+      );
+      dishNames = this.uniqueDishNames([...dishNames, ...missingDishNames]);
+    }
+
+    console.log(`[GEMINI] ========== STEP 1: COMPLETE ==========\n`);
+
+    return dishNames;
+  }
+
+  private async requestDishNamesFromImagePart(
+    imagePart: GeminiImagePart,
+    prompt: string,
+  ): Promise<string[]> {
     const model = this.getClient().getGenerativeModel({
       model: "gemini-2.0-flash-lite",
       generationConfig: {
@@ -265,15 +308,34 @@ export class GeminiService {
 
     const response = await model.generateContent([
       imagePart,
-      MENU_DISH_NAME_EXTRACTION_PROMPT,
+      prompt,
     ]);
 
     const responseText = this.extractResponseText(response.response);
-    const dishNames = parseDishNameArray(responseText);
-
-    console.log(`[GEMINI] ========== STEP 1: COMPLETE ==========\n`);
+    const dishNames = this.uniqueDishNames(parseDishNameArray(responseText));
 
     return dishNames;
+  }
+
+  private async requestMissingDishNamesFromImagePart(
+    imagePart: GeminiImagePart,
+    existingDishNames: string[],
+  ): Promise<string[]> {
+    if (existingDishNames.length === 0) {
+      return [];
+    }
+
+    try {
+      return await this.requestDishNamesFromImagePart(
+        imagePart,
+        buildMissingDishNameReviewPrompt(existingDishNames),
+      );
+    } catch (error) {
+      console.warn(
+        `[GEMINI] Missing dish review failed. Continuing with first-pass dish names. Error: ${this.getErrorMessage(error)}`,
+      );
+      return [];
+    }
   }
 
   private async generateDescriptions(dishNames: string[]): Promise<DishDto[]> {
@@ -292,7 +354,22 @@ export class GeminiService {
     const dishes: DishDto[] = [];
 
     for (const batch of batches) {
-      const batchResult = await this.requestDescriptionBatch(batch);
+      let batchResult;
+
+      try {
+        batchResult = await this.requestDescriptionBatchWithRetry(batch);
+      } catch (error) {
+        console.warn(
+          `[GEMINI] Description batch failed for ${batch.join(", ")}. Retrying items one by one... Error: ${this.getErrorMessage(error)}`,
+        );
+
+        for (const batchName of batch) {
+          dishes.push(await this.requestSingleDescriptionOrFallback(batchName));
+        }
+
+        continue;
+      }
+
       dishes.push(...batchResult.dishes);
 
       for (const missingName of batchResult.missingNames) {
@@ -300,18 +377,60 @@ export class GeminiService {
           `[GEMINI] Missing description for "${missingName}" in batch response. Retrying individually...`,
         );
 
-        const retryResult = await this.requestDescriptionBatch([missingName]);
-        if (retryResult.dishes.length > 0) {
-          dishes.push(retryResult.dishes[0]);
-        } else {
-          dishes.push(this.createFallbackDish(missingName));
-        }
+        dishes.push(await this.requestSingleDescriptionOrFallback(missingName));
       }
     }
 
     console.log(`[GEMINI] ========== STEP 2: COMPLETE ==========\n`);
 
     return dishes;
+  }
+
+  private async requestDescriptionBatchWithRetry(
+    dishNames: string[],
+  ): Promise<ReturnType<typeof normalizeDishDescriptionPayload>> {
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        return await this.requestDescriptionBatch(dishNames);
+      } catch (error) {
+        lastError = error;
+        console.warn(
+          `[GEMINI] Description batch attempt ${attempt}/2 failed for ${dishNames.join(", ")}. Error: ${this.getErrorMessage(error)}`,
+        );
+
+        if (attempt < 2) {
+          await this.delay(1000);
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  private async requestSingleDescriptionOrFallback(
+    dishName: string,
+  ): Promise<DishDto> {
+    try {
+      const retryResult = await this.requestDescriptionBatchWithRetry([
+        dishName,
+      ]);
+
+      if (retryResult.dishes.length > 0) {
+        return retryResult.dishes[0];
+      }
+
+      console.warn(
+        `[GEMINI] Could not generate AI description for "${dishName}". Using fallback description.`,
+      );
+    } catch (error) {
+      console.warn(
+        `[GEMINI] Description retry failed for "${dishName}". Using fallback description. Error: ${this.getErrorMessage(error)}`,
+      );
+    }
+
+    return this.createFallbackDish(dishName);
   }
 
   private async requestDescriptionBatch(dishNames: string[]) {
@@ -408,6 +527,32 @@ export class GeminiService {
       short_description: `${name} is a restaurant dish prepared in a familiar style, with flavors and textures suited for a satisfying meal or snack.`,
       image: null,
     };
+  }
+
+  private uniqueDishNames(dishNames: string[]): string[] {
+    const seenNames = new Set<string>();
+    const uniqueNames: string[] = [];
+
+    for (const dishName of dishNames) {
+      const nameKey = dishName.trim().toLowerCase();
+
+      if (!nameKey || seenNames.has(nameKey)) {
+        continue;
+      }
+
+      seenNames.add(nameKey);
+      uniqueNames.push(dishName.trim());
+    }
+
+    return uniqueNames;
+  }
+
+  private getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  private delay(milliseconds: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
   private chunkArray<T>(items: T[], size: number): T[][] {

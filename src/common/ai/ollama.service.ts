@@ -8,6 +8,7 @@ import {
   ITEM_INGREDIENT_REPORT_SECTION_NAMES,
   ItemComponentReportDto,
   ItemIngredientReportDto,
+  normalizeDishNamePayload,
   normalizeItemComponentReportPayload,
   normalizeItemIngredientReportPayload,
 } from "./menu-image-analysis.util";
@@ -31,52 +32,7 @@ export class OllamaService {
   async analyzeMenuImage(imageUrl: string): Promise<DishDto[]> {
     // Step 1: Extract dish names
     const dishNames = await this.extractDishNames(imageUrl);
-    /* const dishNames = [
-      { name: "Masala Dose" },
-      { name: "Set Dose" },
-      { name: "Rava Dose" },
-      { name: "Plain Dose" },
-      { name: "Butter Dose" },
-      { name: "Cheese Dose" },
-      { name: "Onion Dose" },
-      { name: "Tikka Dose" },
-      { name: "Paneer Dose" },
-      { name: "Pista Dose" },
-      { name: "Veg Dose" },
-      { name: "Tomato Dose" },
-      { name: "Mushroom Dose" },
-      { name: "American Dose" },
-      { name: "Spring Dose" },
-      { name: "Spring Onion Dose" },
-      { name: "Paneer Pepper Dose" },
-      { name: "Rava Pepper Dose" },
-      { name: "Cheese Pepper Dose" },
-      { name: "Onion Pepper Dose" },
-      { name: "Veg Pepper Dose" },
-      { name: "Tomato Pepper Dose" },
-      { name: "Ginger Dose" },
-      { name: "Special Dose" },
-      { name: "Badam Dose" },
-      { name: "Chilli Dose" },
-      { name: "Lemon Dose" },
-      { name: "Plain Idly" },
-      { name: "Rava Idly" },
-      { name: "Cheese Idly" },
-      { name: "Onion Idly" },
-      { name: "Tomato Idly" },
-      { name: "Mushroom Idly" },
-      { name: "Veg Idly" },
-      { name: "Tomato Uttapam" },
-      { name: "Plain Uttapam" },
-      { name: "Cheese Uttapam" },
-      { name: "Onion Uttapam" },
-      { name: "Veg Uttapam" },
-      { name: "Tomato Dosa" },
-      { name: "Plain Uttapa" },
-      { name: "Tomato Uttapa" },
-      { name: "Veg Uttapa" },
-      { name: "Tomato" },
-    ].map((item) => item.name);*/
+
     const dishNamesLog =
       dishNames.length > 0 ? dishNames.join(", ") : "No dish names extracted";
     console.log(`[OLLAMA] Extracted dish names: ${dishNamesLog}`);
@@ -522,18 +478,21 @@ ${dishName}`;
     const prompt = `You are a restaurant menu text extractor.
 
 Task:
-Extract every visible dish name from this menu image.
+Read the menu image and extract the visible dish names.
 
 Rules:
-- Return dish names only.
-- One item per object.
+- Return only food dish names.
+- Scan the whole image from top to bottom and left to right across every column and section.
+- Return each unique dish name one time only.
+- If the same dish name appears multiple times, keep the first occurrence and skip the later duplicates.
+- Keep distinct variants as separate items, for example "Plain Dose" and "Masala Dose".
 - Preserve spelling exactly as seen, even if it looks unusual.
 - Do not write descriptions.
 - Do not summarize.
-- Do not skip items because they look repetitive.
-- Include duplicates only if they are separately listed menu items.
 - Ignore headings, timings, and notes.
 - Ignore prices.
+- Stop after the unique dish names are listed. Do not repeat any name to fill the response.
+- Do not return an empty array when dish names are visible in the image.
 
 Return JSON only in this format:
 [
@@ -542,53 +501,45 @@ Return JSON only in this format:
 ]`;
 
     try {
-      console.log(`[OLLAMA] Sending POST request to ${ollamaUrl}/api/generate`);
-      const startTime = Date.now();
-
-      const response = await fetch(`${ollamaUrl}/api/generate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: this.getModelName(),
-          prompt,
-          images: [await this.imageUrlToBase64(imageUrl)],
-          stream: false,
-        }),
-      });
-
-      const responseTime = Date.now() - startTime;
-      console.log(`[OLLAMA] Response received in ${responseTime}ms`);
-      console.log(
-        `[OLLAMA] Response Status: ${response.status} ${response.statusText}`,
+      const imageBase64 = await this.imageUrlToBase64(imageUrl);
+      let dishNames = await this.requestDishNamesFromOllama(
+        ollamaUrl,
+        prompt,
+        imageBase64,
       );
 
-      if (!response.ok) {
-        throw new InternalServerErrorException(
-          `Ollama service at ${ollamaUrl} returned an error: ${response.status} ${response.statusText}. Please ensure the Ollama server is running and the model '${this.getModelName()}' is available.`,
+      if (dishNames.length === 0) {
+        console.warn(
+          `[OLLAMA] Dish name extraction returned an empty array. Retrying with stricter OCR instructions...`,
+        );
+
+        const retryPrompt = `${prompt}
+
+IMPORTANT:
+The previous response was an empty array.
+Look again at the image text and return every readable unique food item name.
+Return [] only if there are truly no readable food item names in the image.`;
+
+        dishNames = await this.requestDishNamesFromOllama(
+          ollamaUrl,
+          retryPrompt,
+          imageBase64,
         );
       }
 
-      if (!response.body) {
-        throw new InternalServerErrorException(
-          `Ollama service returned an empty response body.`,
+      const missingDishNames = await this.requestMissingDishNamesFromOllama(
+        ollamaUrl,
+        imageBase64,
+        dishNames,
+      );
+
+      if (missingDishNames.length > 0) {
+        console.log(
+          `[OLLAMA] Additional dish names found on review: ${missingDishNames.join(", ")}`,
         );
+        dishNames = this.uniqueDishNames([...dishNames, ...missingDishNames]);
       }
 
-      console.log(`[OLLAMA] Starting to read dish name response stream...`);
-
-      const rawText = await this.readOllamaStreamResponse(response);
-      console.log(
-        `[OLLAMA] Raw streamed response first 300 chars: ${rawText.substring(0, 300)}`,
-      );
-
-      const parsed = this.parseOllamaJsonResponse(rawText);
-      console.log(`[OLLAMA] Parsed JSON successfully:`, JSON.stringify(parsed));
-
-      const dishNames = (parsed as { name: string }[]).map(
-        (item: { name: string }) => item.name,
-      );
       console.log(`[OLLAMA] Extracted dish names:`, dishNames);
       console.log(`[OLLAMA] ========== STEP 1: COMPLETE ==========\n`);
 
@@ -603,6 +554,137 @@ Return JSON only in this format:
       throw new InternalServerErrorException(
         `Unable to connect to Ollama service at ${ollamaUrl}. Please check that the Ollama server is running on the remote PC (${ollamaUrl}), the network connection is stable, and this PC (192.168.29.124) can access port 11434. Error: ${errorMessage}`,
       );
+    }
+  }
+
+  private async requestDishNamesFromOllama(
+    ollamaUrl: string,
+    prompt: string,
+    imageBase64: string,
+  ): Promise<string[]> {
+    console.log(`[OLLAMA] Sending POST request to ${ollamaUrl}/api/generate`);
+    const startTime = Date.now();
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.warn(`[OLLAMA] Request timeout after 600 seconds, aborting...`);
+      controller.abort();
+    }, 600000);
+
+    const response = await (async () => {
+      try {
+        return await fetch(`${ollamaUrl}/api/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: this.getModelName(),
+            prompt,
+            images: [imageBase64],
+            stream: true,
+            format: "json",
+            options: {
+              temperature: 0,
+              num_predict: 900,
+              repeat_penalty: 1.25,
+            },
+          }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    })();
+
+    const responseTime = Date.now() - startTime;
+    console.log(`[OLLAMA] Response received in ${responseTime}ms`);
+    console.log(
+      `[OLLAMA] Response Status: ${response.status} ${response.statusText}`,
+    );
+
+    if (!response.ok) {
+      throw new InternalServerErrorException(
+        `Ollama service at ${ollamaUrl} returned an error: ${response.status} ${response.statusText}. Please ensure the Ollama server is running and the model '${this.getModelName()}' is available.`,
+      );
+    }
+
+    if (!response.body) {
+      throw new InternalServerErrorException(
+        `Ollama service returned an empty response body.`,
+      );
+    }
+
+    console.log(`[OLLAMA] Starting to read dish name response stream...`);
+
+    const rawText = await this.readOllamaStreamResponse(response);
+    console.log(
+      `[OLLAMA] Raw streamed response first 300 chars: ${rawText.substring(0, 300)}`,
+    );
+
+    let parsed: unknown;
+
+    try {
+      parsed = this.parseOllamaJsonResponse(rawText);
+      console.log(`[OLLAMA] Parsed JSON successfully:`, JSON.stringify(parsed));
+    } catch (error) {
+      const partialDishNames = this.extractDishNamesFromPartialJson(rawText);
+
+      if (partialDishNames.length > 0) {
+        console.warn(
+          `[OLLAMA] Dish name JSON was incomplete. Recovered ${partialDishNames.length} name(s) from partial response. Error: ${this.getErrorMessage(error)}`,
+        );
+        return partialDishNames;
+      }
+
+      throw error;
+    }
+
+    return this.uniqueDishNames(normalizeDishNamePayload(parsed));
+  }
+
+  private async requestMissingDishNamesFromOllama(
+    ollamaUrl: string,
+    imageBase64: string,
+    existingDishNames: string[],
+  ): Promise<string[]> {
+    if (existingDishNames.length === 0) {
+      return [];
+    }
+
+    const prompt = `You are reviewing a restaurant menu image for missed items.
+
+Task:
+Look at the whole image again and find food dish names that are visible but missing from the Existing dish names list.
+
+Existing dish names:
+${JSON.stringify(existingDishNames)}
+
+Rules:
+- Return only dish names that are clearly visible in the image and are NOT already in the Existing dish names list.
+- Scan top to bottom and left to right across every column and section.
+- Keep distinct variants as separate items, for example "Plain Dose" and "Masala Dose".
+- Ignore prices, headings, timings, and notes.
+- Do not return descriptions.
+- Do not repeat names.
+- If there are no missing dish names, return [].
+
+Return JSON only in this format:
+[
+{"name": "Missing Dish Name"}
+]`;
+
+    try {
+      return await this.requestDishNamesFromOllama(
+        ollamaUrl,
+        prompt,
+        imageBase64,
+      );
+    } catch (error) {
+      console.warn(
+        `[OLLAMA] Missing dish review failed. Continuing with first-pass dish names. Error: ${this.getErrorMessage(error)}`,
+      );
+      return [];
     }
   }
 
@@ -622,16 +704,36 @@ Return JSON only in this format:
       return [];
     }
 
-    const batchSize = 5;
+    const batchSize = 2;
     const batches = this.chunkArray(dishNames, batchSize);
     const dishes: DishDto[] = [];
 
     try {
       for (const batch of batches) {
-        const batchResult = await this.requestDescriptionBatch(
-          batch,
-          ollamaUrl,
-        );
+        let batchResult: DescriptionBatchResult;
+
+        try {
+          batchResult = await this.requestDescriptionBatchWithRetry(
+            batch,
+            ollamaUrl,
+          );
+        } catch (error) {
+          console.warn(
+            `[OLLAMA] Description batch failed for ${batch.join(", ")}. Retrying items one by one... Error: ${this.getErrorMessage(error)}`,
+          );
+
+          for (const batchName of batch) {
+            dishes.push(
+              await this.requestSingleDescriptionOrFallback(
+                batchName,
+                ollamaUrl,
+              ),
+            );
+          }
+
+          continue;
+        }
+
         dishes.push(...batchResult.dishes);
 
         for (const missingName of batchResult.missingNames) {
@@ -639,18 +741,12 @@ Return JSON only in this format:
             `[OLLAMA] Missing description for "${missingName}" in batch response. Retrying individually...`,
           );
 
-          const retryResult = await this.requestDescriptionBatch(
-            [missingName],
-            ollamaUrl,
+          dishes.push(
+            await this.requestSingleDescriptionOrFallback(
+              missingName,
+              ollamaUrl,
+            ),
           );
-          if (retryResult.dishes.length > 0) {
-            dishes.push(retryResult.dishes[0]);
-          } else {
-            console.warn(
-              `[OLLAMA] Could not generate AI description for "${missingName}". Using fallback description.`,
-            );
-            dishes.push(this.createFallbackDish(missingName));
-          }
         }
       }
 
@@ -672,6 +768,146 @@ Return JSON only in this format:
         `Unable to connect to Ollama service at ${ollamaUrl}. Please check that the Ollama server is running on remote PC 192.168.29.236, network is stable, and this PC 192.168.29.124 can access port 11434. Error: ${errorMessage}`,
       );
     }
+  }
+
+  private async requestDescriptionBatchWithRetry(
+    dishNames: string[],
+    ollamaUrl: string,
+  ): Promise<DescriptionBatchResult> {
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        return await this.requestDescriptionBatch(dishNames, ollamaUrl);
+      } catch (error) {
+        lastError = error;
+        console.warn(
+          `[OLLAMA] Description batch attempt ${attempt}/2 failed for ${dishNames.join(", ")}. Error: ${this.getErrorMessage(error)}`,
+        );
+
+        if (attempt < 2) {
+          await this.delay(1000);
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  private async requestSingleDescriptionOrFallback(
+    dishName: string,
+    ollamaUrl: string,
+  ): Promise<DishDto> {
+    try {
+      const retryResult = await this.requestDescriptionBatchWithRetry(
+        [dishName],
+        ollamaUrl,
+      );
+
+      if (retryResult.dishes.length > 0) {
+        return retryResult.dishes[0];
+      }
+
+      console.warn(
+        `[OLLAMA] Could not generate AI description for "${dishName}". Using fallback description.`,
+      );
+    } catch (error) {
+      console.warn(
+        `[OLLAMA] Description retry failed for "${dishName}". Using fallback description. Error: ${this.getErrorMessage(error)}`,
+      );
+    }
+
+    return this.createFallbackDish(dishName);
+  }
+
+  private uniqueDishNames(dishNames: string[]): string[] {
+    const seenNames = new Set<string>();
+    const uniqueNames: string[] = [];
+
+    for (const dishName of dishNames) {
+      const nameKey = dishName.trim().toLowerCase();
+
+      if (!nameKey || seenNames.has(nameKey)) {
+        continue;
+      }
+
+      seenNames.add(nameKey);
+      uniqueNames.push(dishName.trim());
+    }
+
+    return uniqueNames;
+  }
+
+  private extractDishNamesFromPartialJson(responseText: string): string[] {
+    const dishNames: string[] = [];
+    const namePropertyPattern = /"name"\s*:\s*"((?:\\.|[^"\\])*)"/g;
+    const priceMapPropertyPattern =
+      /"((?:\\.|[^"\\])*)"\s*:\s*(?:"[^"]*"|\d+(?:\.\d+)?)(?=\s*[,}])/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = namePropertyPattern.exec(responseText)) !== null) {
+      const rawName = match[1];
+      const dishName = this.parseJsonStringValue(rawName);
+
+      if (this.isLikelyDishName(dishName)) {
+        dishNames.push(dishName);
+      }
+    }
+
+    while ((match = priceMapPropertyPattern.exec(responseText)) !== null) {
+      const rawKey = match[1];
+      const dishName = this.parseJsonStringValue(rawKey);
+
+      if (this.isLikelyDishName(dishName)) {
+        dishNames.push(dishName);
+      }
+    }
+
+    return this.uniqueDishNames(dishNames);
+  }
+
+  private parseJsonStringValue(value: string): string {
+    try {
+      return JSON.parse(`"${value}"`).trim();
+    } catch {
+      return value.replace(/\\"/g, '"').trim();
+    }
+  }
+
+  private isLikelyDishName(value: string): boolean {
+    const normalizedValue = value.trim().toLowerCase();
+
+    if (!normalizedValue) {
+      return false;
+    }
+
+    if (
+      [
+        "dishes",
+        "names",
+        "items",
+        "menu_items",
+        "dish_names",
+        "dishnames",
+        "unique_dishes",
+        "unique_dish_names",
+        "menu_dishes",
+        "name",
+        "price",
+      ].includes(normalizedValue)
+    ) {
+      return false;
+    }
+
+    return /[a-z]/i.test(value);
+  }
+
+  private getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  private delay(milliseconds: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
   private async requestDescriptionBatch(
@@ -723,25 +959,29 @@ ${inputJson}`;
       controller.abort();
     }, 600000);
 
-    const response = await fetch(`${ollamaUrl}/api/generate`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: this.getModelName(),
-        prompt,
-        stream: true,
-        format: "json",
-        options: {
-          temperature: 0.2,
-          num_predict: Math.max(450, dishNames.length * 120),
-        },
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
+    const response = await (async () => {
+      try {
+        return await fetch(`${ollamaUrl}/api/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: this.getModelName(),
+            prompt,
+            stream: true,
+            format: "json",
+            options: {
+              temperature: 0.2,
+              num_predict: Math.max(300, dishNames.length * 100),
+            },
+          }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    })();
 
     const responseTime = Date.now() - startTime;
 
