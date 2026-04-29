@@ -154,7 +154,7 @@ export class MenuScansService {
     const normalizedDishes = new Map<string, DishDto>();
 
     for (const dish of dishes) {
-      const name = dish.name.trim();
+      const name = dish.name.replace(/\s+/g, ' ').trim();
       const shortDescription = dish.short_description.trim();
 
       if (!name || !shortDescription) {
@@ -183,58 +183,67 @@ export class MenuScansService {
     dishes: DishDto[],
   ): Promise<void> {
     for (const dish of dishes) {
-      const existingItem = await this.prismaService.menuItem.findFirst({
-        where: {
-          name: {
-            equals: dish.name,
-            mode: 'insensitive',
-          },
-        },
-        select: {
-          id: true,
-          image: true,
-        },
-      });
+      try {
+        await this.prismaService.$transaction(async (tx) => {
+          const existingItem = await tx.menuItem.findFirst({
+            where: {
+              name: {
+                equals: dish.name,
+                mode: 'insensitive',
+              },
+            },
+            select: {
+              id: true,
+              image: true,
+            },
+          });
 
-      const itemId = existingItem?.id ?? generateId();
+          const itemId = existingItem?.id ?? generateId();
 
-      if (existingItem) {
-        await this.prismaService.menuItem.update({
-          where: { id: itemId },
-          data: {
-            shortDescription: dish.short_description,
-            image: existingItem.image ?? dish.image ?? null,
-          },
+          if (existingItem) {
+            await tx.menuItem.update({
+              where: { id: itemId },
+              data: {
+                shortDescription: dish.short_description,
+                image: existingItem.image ?? dish.image ?? null,
+              },
+            });
+          } else {
+            await tx.menuItem.create({
+              data: {
+                id: itemId,
+                name: dish.name,
+                shortDescription: dish.short_description,
+                image: dish.image ?? null,
+              },
+            });
+          }
+
+          const existingUserLink = await tx.userMenuItem.findFirst({
+            where: {
+              itemId,
+              userId,
+            },
+            select: {
+              id: true,
+            },
+          });
+
+          if (!existingUserLink) {
+            await tx.userMenuItem.create({
+              data: {
+                id: generateId(),
+                itemId,
+                userId,
+              },
+            });
+          }
         });
-      } else {
-        await this.prismaService.menuItem.create({
-          data: {
-            id: itemId,
-            name: dish.name,
-            shortDescription: dish.short_description,
-            image: dish.image ?? null,
-          },
-        });
-      }
-
-      const existingUserLink = await this.prismaService.userMenuItem.findFirst({
-        where: {
-          itemId,
-          userId,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!existingUserLink) {
-        await this.prismaService.userMenuItem.create({
-          data: {
-            id: generateId(),
-            itemId,
-            userId,
-          },
-        });
+      } catch (error) {
+        this.logger.error(
+          `Failed to persist dish "${dish.name}" in background`,
+          error instanceof Error ? error.stack : String(error),
+        );
       }
     }
   }

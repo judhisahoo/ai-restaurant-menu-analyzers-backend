@@ -3,11 +3,20 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service'; // Ensure PrismaService is imported here
 
 // Explicitly define the type for a transaction client that can be used within Prisma transactions.
 type TransactionClient = Omit<PrismaClient, '$on' | '$connect' | '$disconnect' | '$transaction' | '$extends' | '$use'>;
+
+type MockDishRow = {
+  dish_name?: unknown;
+  component_details?: unknown;
+  ingredient_details?: unknown;
+};
 
 import { generateId } from '../common/utils/id.util';
 import { persistImageValue } from '../common/utils/image-storage.util';
@@ -184,6 +193,10 @@ export class DishService {
   }
 
   async getItemComponents(itemName: string) {
+    if (this.shouldUseMuckData()) {
+      return this.getItemComponentsFromMockData(itemName);
+    }
+
     const item = await this.getItemByNameSlug(itemName);
     let components = await this.findItemComponents(item.id);
 
@@ -215,7 +228,13 @@ export class DishService {
 
     return {
       message: 'Item components fetched successfully.',
-      data: this.formatItemComponents(components),
+      data: {
+        item: {
+          item_id: item.id,
+          item_name: item.normalizedName,
+        },
+        component: this.formatItemComponentsForResponse(components),
+      },
     };
   }
 
@@ -304,6 +323,10 @@ export class DishService {
   }
 
   async getItemIngredients(itemName: string) {
+    if (this.shouldUseMuckData()) {
+      return this.getItemIngredientsFromMockData(itemName);
+    }
+
     const item = await this.getItemByNameSlug(itemName);
     const ingredients = await this.findItemIngredients(item.id);
 
@@ -335,7 +358,13 @@ export class DishService {
 
     return {
       message: 'Ingredient details fetched successfully.',
-      data: this.formatItemIngredients(ingredients),
+      data: {
+        item: {
+          item_id: item.id,
+          item_name: item.normalizedName,
+        },
+        ingredient: this.formatItemIngredientsForResponse(ingredients),
+      },
     };
   }
 
@@ -480,6 +509,269 @@ export class DishService {
     }
 
     return normalizedItemName;
+  }
+
+  private shouldUseMuckData(): boolean {
+    return process.env.USE_MUCK_DATA?.trim().toLowerCase() === 'true';
+  }
+
+  private async getItemComponentsFromMockData(itemName: string) {
+    console.log('Using mock data for item components, getItemComponentsFromMockData(). This is not based on real AI analysis and is only for testing purposes.');
+    console.log('Item name received:', itemName);
+    const normalizedItemName = this.normalizeItemNameSlug(itemName);
+    console.log('Normalized item name for mock data lookup:', normalizedItemName);
+    const fakeDataPath = join(process.cwd(), 'data', 'dish_data.json');
+    const fileContents = await readFile(fakeDataPath, 'utf8');
+    const parsed = JSON.parse(fileContents) as MockDishRow[];
+
+    if (!Array.isArray(parsed)) {
+      throw new Error('data/dish_data.json must contain a JSON array.');
+    }
+
+    const dish = parsed.find((row) => {
+      if (typeof row.dish_name !== 'string') {
+        return false;
+      }
+
+      return this.normalizeDishName(row.dish_name) === normalizedItemName;
+    });
+
+    if (!dish) {
+      throw new NotFoundException(
+        `Menu item "${normalizedItemName}" is not available in data/dish_data.json.`,
+      );
+    }
+
+    return {
+      message: 'Item components generated successfully.',
+      data: {
+        item: {
+          item_id: this.createMockItemId(normalizedItemName),
+          item_name: normalizedItemName,
+        },
+        component: this.parseMockComponentDetails(dish.component_details),
+      },
+    };
+  }
+
+  private async getItemIngredientsFromMockData(itemName: string) {
+    const normalizedItemName = this.normalizeItemNameSlug(itemName);
+    const fakeDataPath = join(process.cwd(), 'data', 'dish_data.json');
+    const fileContents = await readFile(fakeDataPath, 'utf8');
+    const parsed = JSON.parse(fileContents) as MockDishRow[];
+
+    if (!Array.isArray(parsed)) {
+      throw new Error('data/dish_data.json must contain a JSON array.');
+    }
+
+    const dish = parsed.find((row) => {
+      if (typeof row.dish_name !== 'string') {
+        return false;
+      }
+
+      return this.normalizeDishName(row.dish_name) === normalizedItemName;
+    });
+
+    if (!dish) {
+      throw new NotFoundException(
+        `Menu item "${normalizedItemName}" is not available in data/dish_data.json.`,
+      );
+    }
+
+    return {
+      message: 'Ingredient details generated successfully.',
+      data: {
+        item: {
+          item_id: this.createMockItemId(normalizedItemName),
+          item_name: normalizedItemName,
+        },
+        ingredient: this.parseMockIngredientDetails(dish.ingredient_details),
+      },
+    };
+  }
+
+  private normalizeDishName(dishName: string): string {
+    return dishName.replace(/-/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
+  private createMockItemId(itemName: string): string {
+    const hash = createHash('sha256').update(itemName).digest('hex');
+
+    return [
+      hash.slice(0, 8),
+      hash.slice(8, 12),
+      `4${hash.slice(13, 16)}`,
+      `8${hash.slice(17, 20)}`,
+      hash.slice(20, 32),
+    ].join('-');
+  }
+
+  private parseMockComponentDetails(
+    rawComponentDetails: unknown,
+  ): Array<{ name: string; detail: string }> {
+    if (typeof rawComponentDetails !== 'string') {
+      return [];
+    }
+
+    const parsed = JSON.parse(rawComponentDetails.replace(/'/g, '"')) as Record<
+      string,
+      unknown
+    >;
+
+    return Object.entries(parsed).map(([key, value]) => ({
+      name: this.formatComponentName(key),
+      detail: String(value),
+    }));
+  }
+
+  private parseMockIngredientDetails(
+    rawIngredientDetails: unknown,
+  ): Array<{ name: string; detail: string }> {
+    if (typeof rawIngredientDetails !== 'string') {
+      return this.buildIngredientResponse({});
+    }
+
+    const parsed = JSON.parse(rawIngredientDetails.replace(/'/g, '"')) as Record<
+      string,
+      unknown
+    >;
+
+    return this.buildIngredientResponse(parsed);
+  }
+
+  private buildIngredientResponse(
+    parsed: Record<string, unknown>,
+  ): Array<{ name: string; detail: string }> {
+    const mainIngredients = this.getStringArray(parsed.main_ingredients);
+    const protein = this.getNumberValue(parsed.protein_g);
+    const carbohydrates = this.getNumberValue(parsed.carbohydrates_g);
+    const fats = this.getNumberValue(parsed.fats_g);
+
+    return [
+      {
+        name: 'Primary Ingredients',
+        detail: this.formatIngredientCounts(mainIngredients),
+      },
+      {
+        name: 'Binding & Leavening',
+        detail: this.pickIngredients(
+          mainIngredients,
+          ['flour', 'yogurt', 'cream', 'rice', 'lentils'],
+          'None',
+        ),
+      },
+      {
+        name: 'Flavorings',
+        detail: this.pickIngredients(
+          mainIngredients,
+          [
+            'onions',
+            'garlic',
+            'ginger',
+            'coriander',
+            'cumin',
+            'turmeric',
+            'chili',
+            'garam masala',
+            'tomatoes',
+          ],
+          mainIngredients.length > 0 ? mainIngredients.join(', ') : 'None',
+        ),
+      },
+      {
+        name: 'Fats & Cooking Medium',
+        detail: this.pickIngredients(
+          mainIngredients,
+          ['oil', 'ghee', 'cream', 'coconut milk'],
+          fats === null ? 'None' : `Estimated fat: ${fats}g`,
+        ),
+      },
+      {
+        name: 'Texture Analysis',
+        detail: 'Texture varies by cooking method and ingredient preparation.',
+      },
+      {
+        name: 'Nutritional Profile',
+        detail: this.formatNutritionProfile(protein, carbohydrates, fats),
+      },
+      {
+        name: 'Accompaniments',
+        detail: 'Chutney, raita, pickle, or rice/bread depending on serving style.',
+      },
+      {
+        name: 'Allergy & Dietary Notes',
+        detail:
+          mainIngredients.length > 0
+            ? `Contains ${mainIngredients.join(', ')}. Check dietary restrictions before serving.`
+            : 'Check dietary restrictions before serving.',
+      },
+    ];
+  }
+
+  private getStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .filter((item): item is string => typeof item === 'string')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  private getNumberValue(value: unknown): number | null {
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  }
+
+  private formatIngredientCounts(ingredients: string[]): string {
+    if (ingredients.length === 0) {
+      return 'None';
+    }
+
+    const counts = new Map<string, number>();
+    for (const ingredient of ingredients) {
+      const key = ingredient.toLowerCase();
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    return [...counts.entries()]
+      .map(([ingredient, count]) => `${ingredient}:${count}`)
+      .join(', ');
+  }
+
+  private pickIngredients(
+    ingredients: string[],
+    allowedIngredients: string[],
+    fallback: string,
+  ): string {
+    const allowed = new Set(allowedIngredients);
+    const matched = ingredients.filter((ingredient) =>
+      allowed.has(ingredient.toLowerCase()),
+    );
+
+    return matched.length > 0 ? matched.join(', ') : fallback;
+  }
+
+  private formatNutritionProfile(
+    protein: number | null,
+    carbohydrates: number | null,
+    fats: number | null,
+  ): string {
+    const nutritionParts = [
+      protein === null ? null : `Protein ${protein}g`,
+      carbohydrates === null ? null : `Carbohydrates ${carbohydrates}g`,
+      fats === null ? null : `Fat ${fats}g`,
+    ].filter((part): part is string => part !== null);
+
+    return nutritionParts.length > 0
+      ? nutritionParts.join(', ')
+      : 'Nutrition data not available.';
+  }
+
+  private formatComponentName(key: string): string {
+    return key
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (character) => character.toUpperCase());
   }
 
   private async findItemComponents(itemId: string) {
@@ -648,6 +940,18 @@ export class DishService {
     }));
   }
 
+  private formatItemComponentsForResponse(
+    components: Array<{
+      name: string;
+      summary: string;
+    }>,
+  ): Array<{ name: string; detail: string }> {
+    return components.map((component) => ({
+      name: component.name,
+      detail: component.summary,
+    }));
+  }
+
   private formatItemIngredients(
     ingredients: Array<{
       id: string;
@@ -667,6 +971,18 @@ export class DishService {
       row_order: ingredient.rowOrder,
       created_at: ingredient.createdAt.toISOString(),
       updated_at: ingredient.updatedAt.toISOString(),
+    }));
+  }
+
+  private formatItemIngredientsForResponse(
+    ingredients: Array<{
+      name: string;
+      detail: string;
+    }>,
+  ): Array<{ name: string; detail: string }> {
+    return ingredients.map((ingredient) => ({
+      name: ingredient.name,
+      detail: ingredient.detail,
     }));
   }
 

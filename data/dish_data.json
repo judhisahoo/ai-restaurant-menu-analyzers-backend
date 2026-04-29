@@ -1,6 +1,6 @@
 [
   {
-    "dish_name": "Biryani (Chicken)",
+    "dish_name": "Biryani Chicken",
     "short_description": "A classic Biryani (Chicken) dish, known for its rich and creamy texture. Prepared with fresh ingredients and aromatic spices, it offers a delightful culinary experience. Perfect for a hearty meal, often served with rice or bread.",
     "component_details": "{'main_protein': 'chicken', 'sauce_base': 'spinach-based', 'spice_level': 'very spicy'}",
     "ingredient_details": "{'protein_g': 28.6, 'carbohydrates_g': 50.7, 'fats_g': 33.9, 'main_ingredients': ['garam masala', 'turmeric', 'cream']}",

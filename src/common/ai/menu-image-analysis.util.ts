@@ -267,7 +267,7 @@ export function parseDishNameArray(responseText: string): string[] {
 export function normalizeDishNamePayload(parsed: unknown): string[] {
   const items = Array.isArray(parsed)
     ? parsed
-    : getFirstArrayProperty(parsed, [
+    : (getFirstArrayProperty(parsed, [
         "dishes",
         "names",
         "items",
@@ -282,7 +282,7 @@ export function normalizeDishNamePayload(parsed: unknown): string[] {
         ? Object.keys(parsed)
         : parsed && typeof parsed === "object"
           ? [parsed]
-          : null);
+          : null));
 
   if (!items) {
     throw new BadRequestException(
@@ -426,37 +426,7 @@ export function normalizeDishDescriptionPayload(
 export function normalizeItemComponentReportPayload(
   parsed: unknown,
 ): ItemComponentReportDto[] {
-  const items = Array.isArray(parsed)
-    ? parsed
-    : hasComponentsArray(parsed)
-      ? parsed.components
-      : parsed && typeof parsed === "object"
-        ? [parsed]
-        : null;
-
-  if (!items) {
-    throw new BadRequestException(
-      "AI response was not in the expected item component array format.",
-    );
-  }
-
-  const components = items
-    .filter(
-      (item): item is Record<string, unknown> =>
-        !!item && typeof item === "object",
-    )
-    .map((item) => ({
-      name: typeof item.name === "string" ? item.name.trim() : "",
-      detail:
-        typeof item.detail === "string"
-          ? item.detail.trim()
-          : typeof item.summary === "string"
-            ? item.summary.trim()
-            : "",
-    }))
-    .filter(
-      (component) => component.name.length > 0 && component.detail.length > 0,
-    );
+  const components = normalizeNameDetailPayload(parsed, "item components");
 
   if (components.length === 0) {
     throw new BadRequestException(
@@ -470,10 +440,7 @@ export function normalizeItemComponentReportPayload(
 export function normalizeItemIngredientReportPayload(
   parsed: unknown,
 ): ItemIngredientReportDto[] {
-  const ingredients = normalizeNameDetailPayload(
-    parsed,
-    "ingredient details",
-  );
+  const ingredients = normalizeNameDetailPayload(parsed, "ingredient details");
 
   if (ingredients.length === 0) {
     throw new BadRequestException(
@@ -524,8 +491,7 @@ function findMatchingSectionName(
 
   return (
     sectionNames.find(
-      (sectionName) =>
-        sectionName.trim().toLowerCase() === normalizedItemName,
+      (sectionName) => sectionName.trim().toLowerCase() === normalizedItemName,
     ) ?? null
   );
 }
@@ -536,13 +502,23 @@ function normalizeNameDetailPayload(
 ): Array<{ name: string; detail: string }> {
   const items = Array.isArray(parsed)
     ? parsed
-    : hasComponentsArray(parsed)
-      ? parsed.components
-      : hasIngredientsArray(parsed)
-        ? parsed.ingredients
-        : parsed && typeof parsed === "object"
-          ? [parsed]
-          : null;
+    : (getFirstArrayProperty(parsed, [
+        "components",
+        "ingredients",
+        "items",
+        "sections",
+        "data",
+        "results",
+        "report",
+        "componentReport",
+        "ingredientReport",
+        "item_components",
+        "itemComponents",
+        "ingredient_details",
+        "ingredientDetails",
+      ]) ??
+      normalizeNameDetailMapPayload(parsed) ??
+      (parsed && typeof parsed === "object" ? [parsed] : null));
 
   if (!items) {
     throw new BadRequestException(
@@ -551,20 +527,212 @@ function normalizeNameDetailPayload(
   }
 
   return items
-    .filter(
-      (item): item is Record<string, unknown> =>
-        !!item && typeof item === "object",
-    )
-    .map((item) => ({
-      name: typeof item.name === "string" ? item.name.trim() : "",
-      detail:
-        typeof item.detail === "string"
-          ? item.detail.trim()
-          : typeof item.summary === "string"
-            ? item.summary.trim()
-            : "",
-    }))
+    .map(normalizeNameDetailItem)
     .filter((item) => item.name.length > 0 && item.detail.length > 0);
+}
+
+function normalizeNameDetailMapPayload(
+  value: unknown,
+): Record<string, unknown>[] | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const nestedReport =
+    record.report ??
+    record.component_report ??
+    record.componentReport ??
+    record.ingredient_report ??
+    record.ingredientReport;
+  if (nestedReport && nestedReport !== value) {
+    const nestedItems = normalizeNameDetailMapPayload(nestedReport);
+    if (nestedItems) {
+      return nestedItems;
+    }
+  }
+
+  if (hasNameDetailLikeKeys(record)) {
+    return [record];
+  }
+
+  const entries = Object.entries(record)
+    .map(([name, detailValue]) => nameDetailEntryToRecord(name, detailValue))
+    .filter((item): item is Record<string, unknown> => !!item);
+
+  return entries.length > 0 ? entries : null;
+}
+
+function normalizeNameDetailItem(item: unknown): {
+  name: string;
+  detail: string;
+} {
+  if (!item || typeof item !== "object") {
+    return { name: "", detail: "" };
+  }
+
+  const record = item as Record<string, unknown>;
+  const directName = firstStringValue(record, [
+    "name",
+    "section",
+    "section_name",
+    "sectionName",
+    "title",
+    "component",
+    "component_name",
+    "componentName",
+    "ingredient",
+    "ingredient_name",
+    "ingredientName",
+    "category",
+  ]);
+  const directDetail = firstStringValue(record, [
+    "detail",
+    "details",
+    "component_detail",
+    "componentDetail",
+    "ingredient_detail",
+    "ingredientDetail",
+    "summary",
+    "description",
+    "short_description",
+    "shortDescription",
+    "text",
+    "value",
+    "content",
+    "analysis",
+  ]);
+
+  if (directName && directDetail) {
+    return { name: directName, detail: directDetail };
+  }
+
+  const mappedEntry = Object.entries(record)
+    .map(([name, detailValue]) => nameDetailEntryToRecord(name, detailValue))
+    .find((entry) => !!entry);
+
+  if (mappedEntry) {
+    return {
+      name: String(mappedEntry.name).trim(),
+      detail: String(mappedEntry.detail).trim(),
+    };
+  }
+
+  return { name: "", detail: "" };
+}
+
+function nameDetailEntryToRecord(
+  name: string,
+  detailValue: unknown,
+): Record<string, unknown> | null {
+  const trimmedName = name.trim();
+  if (!trimmedName || isWrapperOrMetadataKey(trimmedName)) {
+    return null;
+  }
+
+  if (typeof detailValue === "string" && detailValue.trim().length > 0) {
+    return { name: trimmedName, detail: detailValue.trim() };
+  }
+
+  if (
+    detailValue &&
+    typeof detailValue === "object" &&
+    !Array.isArray(detailValue)
+  ) {
+    const detail = firstStringValue(detailValue as Record<string, unknown>, [
+      "detail",
+      "details",
+      "component_detail",
+      "componentDetail",
+      "ingredient_detail",
+      "ingredientDetail",
+      "summary",
+      "description",
+      "short_description",
+      "shortDescription",
+      "text",
+      "value",
+      "content",
+      "analysis",
+    ]);
+
+    if (detail) {
+      return { name: trimmedName, detail };
+    }
+  }
+
+  return null;
+}
+
+function hasNameDetailLikeKeys(record: Record<string, unknown>): boolean {
+  return (
+    firstStringValue(record, [
+      "name",
+      "section",
+      "section_name",
+      "sectionName",
+      "title",
+      "component",
+      "component_name",
+      "componentName",
+      "ingredient",
+      "ingredient_name",
+      "ingredientName",
+      "category",
+    ]) !== "" &&
+    firstStringValue(record, [
+      "detail",
+      "details",
+      "component_detail",
+      "componentDetail",
+      "ingredient_detail",
+      "ingredientDetail",
+      "summary",
+      "description",
+      "short_description",
+      "shortDescription",
+      "text",
+      "value",
+      "content",
+      "analysis",
+    ]) !== ""
+  );
+}
+
+function firstStringValue(
+  record: Record<string, unknown>,
+  keys: string[],
+): string {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  return "";
+}
+
+function isWrapperOrMetadataKey(key: string): boolean {
+  const normalizedKey = key.trim().toLowerCase();
+
+  return [
+    "components",
+    "ingredients",
+    "items",
+    "sections",
+    "data",
+    "results",
+    "report",
+    "component_report",
+    "componentreport",
+    "ingredient_report",
+    "ingredientreport",
+    "dish",
+    "dish_name",
+    "dishname",
+    "input",
+  ].includes(normalizedKey);
 }
 
 function extractJsonPayload(responseText: string): string {
@@ -593,28 +761,6 @@ function extractJsonPayload(responseText: string): string {
   }
 
   return trimmed;
-}
-
-function hasComponentsArray(
-  value: unknown,
-): value is { components: Record<string, unknown>[] } {
-  return (
-    !!value &&
-    typeof value === "object" &&
-    "components" in value &&
-    Array.isArray(value.components)
-  );
-}
-
-function hasIngredientsArray(
-  value: unknown,
-): value is { ingredients: Record<string, unknown>[] } {
-  return (
-    !!value &&
-    typeof value === "object" &&
-    "ingredients" in value &&
-    Array.isArray(value.ingredients)
-  );
 }
 
 function getFirstArrayProperty(
