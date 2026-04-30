@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "exclude": [
     "node_modules",
+    "api",
     "dist",
     "prisma",
     "prisma.config.ts",

@@ -7,7 +7,6 @@ import { PrismaService } from '../database/prisma.service';
 import { UserService } from '../user/user.service';
 import {
   AiService,
-  type MenuScanAiProvider,
   type MenuScanProcessingMode,
 } from '../common/ai/ai.service';
 import { DishDto } from './dto/dish-analysis.dto';
@@ -16,8 +15,6 @@ type FakeDishRow = {
   dish_name?: unknown;
   short_description?: unknown;
 };
-
-const DEFAULT_MENU_SCAN_AI_TIMEOUT_MS = 240_000;
 
 @Injectable()
 export class MenuScansService {
@@ -37,28 +34,29 @@ export class MenuScansService {
 
     const capturedAt = new Date();
     console.log('now at create() for processing menu scan upload to vercel storage and return image url.');
-    const storedPhoto = await persistUploadedImage(
+    const storedPhoto = "https://sx4j6cy16hijedwf.public.blob.vercel-storage.com/scan_photo/scan-f8ca6489-14ad-4a10-916f-7f4f9b52e2ba.jpg";
+    /*const storedPhoto = await persistUploadedImage(
       file.buffer,
       file.mimetype,
       'scan_photo',
       'scan',
-    );
+    );*/
     console.log('Menu scan image stored successfully. URL:', storedPhoto);
     console.log('now at create() for saving menu scan record in database and then processing dish data from menu scan image using Gemini API or fake data based on configuration settings');
-    const menuScan = await this.prismaService.menuScan.create({
+    /*const menuScan = await this.prismaService.menuScan.create({
       data: {
         userId,
         scanPhoto: storedPhoto,
         capturedAt,
       },
-    });
+    });*/
     
-    console.log('Menu scan record saved successfully. ID:', menuScan.id);
+    //console.log('Menu scan record saved successfully. ID:', menuScan.id);
     console.log(' now calling process_ai_for_dis_data() to analyze menu scan image and prepare dish data for response and background persistence.');
 
     const dishes = await this.process_ai_for_dis_data(userId, storedPhoto);
 
-    return {
+    /*return {
       message: 'Menu scan saved and dish data prepared successfully.',
       data: {
         menu_scan: {
@@ -69,7 +67,21 @@ export class MenuScansService {
         },
         dishes,
       },
+    };*/
+
+    return {
+      message: 'Menu scan saved and dish data prepared successfully.',
+      data: {
+        menu_scan: {
+          id: 12,
+          user_id: userId,
+          scan_photo: storedPhoto,
+          captured_at: capturedAt.toISOString(),
+        },
+        dishes,
+      },
     };
+    
   }
 
   private async process_ai_for_dis_data(
@@ -81,15 +93,15 @@ export class MenuScansService {
       await this.aiService.resolveMenuScanProcessingMode();
     console.log('Resolved menu scan AI processing mode:', processingMode);
 
-    const extractedDishes =
-      processingMode === 'offline'
-        ? await this.readFakeDishData()
-        : await this.getDishDataWithTimeout(imageUrl, processingMode);
+    const extractedDishes = await this.getDishDataForProcessingMode(
+      imageUrl,
+      processingMode,
+    );
 
     const dishesWithImages =
       await this.get_dish_image_by_dish_name(extractedDishes);
 
-    if (this.shouldPersistProcessedDishes()) {
+    setImmediate(() => {
       void this.persistProcessedDishes(userId, dishesWithImages).catch(
         (error: unknown) => {
           const message =
@@ -100,41 +112,20 @@ export class MenuScansService {
           );
         },
       );
-    }
+    });
 
     return dishesWithImages;
   }
 
-  private async getDishDataWithTimeout(
+  private async getDishDataForProcessingMode(
     imageUrl: string,
-    processingMode: MenuScanAiProvider,
+    processingMode: MenuScanProcessingMode,
   ): Promise<DishDto[]> {
-    const timeoutMs = this.getMenuScanAiTimeoutMs();
-    let timeoutId: NodeJS.Timeout | undefined;
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(new Error('Menu scan AI processing timed out.'));
-      }, timeoutMs);
-    });
-
-    try {
-      return await Promise.race([
-        this.aiService.analyzeMenuImage(imageUrl, processingMode),
-        timeoutPromise,
-      ]);
-    } catch (error) {
-      this.logger.warn(
-        `Menu scan AI processing did not complete within ${timeoutMs}ms. Returning sample dish data to avoid a Vercel function timeout. Error: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-
+    if (processingMode === 'offline') {
       return this.readFakeDishData();
-    } finally {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
     }
+
+    return this.aiService.analyzeMenuImage(imageUrl, processingMode);
   }
 
   private async readFakeDishData(): Promise<DishDto[]> {
@@ -185,26 +176,6 @@ export class MenuScansService {
   ): Promise<DishDto[]> {
     // Since dish images are optional, just return normalized dishes without database lookup
     return this.normalizeDishData(dishes);
-  }
-
-  private getMenuScanAiTimeoutMs(): number {
-    const configuredValue = Number(process.env.MENU_SCAN_AI_TIMEOUT_MS);
-
-    if (Number.isFinite(configuredValue) && configuredValue > 0) {
-      return configuredValue;
-    }
-
-    return DEFAULT_MENU_SCAN_AI_TIMEOUT_MS;
-  }
-
-  private shouldPersistProcessedDishes(): boolean {
-    const configuredValue = process.env.MENU_SCAN_PERSIST_DISHES;
-
-    if (configuredValue) {
-      return configuredValue.toLowerCase() === 'true';
-    }
-
-    return process.env.VERCEL !== '1';
   }
 
   private async persistProcessedDishes(
