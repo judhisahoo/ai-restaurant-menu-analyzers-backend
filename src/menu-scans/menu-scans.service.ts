@@ -35,29 +35,29 @@ export class MenuScansService {
 
     const capturedAt = new Date();
     console.log('now at create() for processing menu scan upload to vercel storage and return image url.');
-    const storedPhoto = "https://sx4j6cy16hijedwf.public.blob.vercel-storage.com/scan_photo/scan-f8ca6489-14ad-4a10-916f-7f4f9b52e2ba.jpg";
-    /*const storedPhoto = await persistUploadedImage(
+    //const storedPhoto = "https://sx4j6cy16hijedwf.public.blob.vercel-storage.com/scan_photo/scan-f8ca6489-14ad-4a10-916f-7f4f9b52e2ba.jpg";
+    const storedPhoto = await persistUploadedImage(
       file.buffer,
       file.mimetype,
       'scan_photo',
       'scan',
-    );*/
+    );
     console.log('Menu scan image stored successfully. URL:', storedPhoto);
     console.log('now at create() for saving menu scan record in database and then processing dish data from menu scan image using Gemini API or fake data based on configuration settings');
-    /*const menuScan = await this.prismaService.menuScan.create({
+    const menuScan = await this.prismaService.menuScan.create({
       data: {
         userId,
         scanPhoto: storedPhoto,
         capturedAt,
       },
-    });*/
+    });
     
     //console.log('Menu scan record saved successfully. ID:', menuScan.id);
     console.log(' now calling process_ai_for_dis_data() to analyze menu scan image and prepare dish data for response and background persistence.');
 
     const dishes = await this.process_ai_for_dis_data(userId, storedPhoto);
 
-    /*return {
+    return {
       message: 'Menu scan saved and dish data prepared successfully.',
       data: {
         menu_scan: {
@@ -65,19 +65,6 @@ export class MenuScansService {
           user_id: userId,
           scan_photo: storedPhoto,
           captured_at: menuScan.capturedAt.toISOString(),
-        },
-        dishes,
-      },
-    };*/
-
-    return {
-      message: 'Menu scan saved and dish data prepared successfully.',
-      data: {
-        menu_scan: {
-          id: 12,
-          user_id: userId,
-          scan_photo: storedPhoto,
-          captured_at: capturedAt.toISOString(),
         },
         dishes,
       },

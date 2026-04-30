@@ -335,11 +335,7 @@ export class DishService {
         item.normalizedName,
       );
 
-      this.saveGeneratedItemIngredientsInBackground(
-        item.id,
-        item.normalizedName,
-        ingredientReport,
-      );
+      await this.createGeneratedItemIngredients(item.id, ingredientReport);
 
       return {
         message: 'Ingredient details generated successfully.',
