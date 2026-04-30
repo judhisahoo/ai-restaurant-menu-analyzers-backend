@@ -4,7 +4,10 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import * as dns from 'dns';
 import * as nodemailer from 'nodemailer';
+import SMTPTransport = require('nodemailer/lib/smtp-transport');
+import * as tls from 'tls';
 import { IEmailProvider, SendEmailPayload } from '../interfaces/email-provider.interface';
 
 /**
@@ -16,6 +19,7 @@ import { IEmailProvider, SendEmailPayload } from '../interfaces/email-provider.i
  * - GMAIL_APP_PASSWORD: Generated app password (16 characters)
  *   See: https://myaccount.google.com/apppasswords
  * - GMAIL_FROM_NAME: From name (optional, defaults to 'Notification')
+ * - GMAIL_SMTP_FORCE_IPV4: Force IPv4 SMTP connection (optional, defaults to true)
  * 
  * Setup Instructions:
  * 1. Enable 2-Step Verification on your Gmail account
@@ -29,25 +33,38 @@ import { IEmailProvider, SendEmailPayload } from '../interfaces/email-provider.i
 @Injectable()
 export class GmailEmailProvider implements IEmailProvider {
   private readonly logger = new Logger(GmailEmailProvider.name);
+  private readonly smtpHost = 'smtp.gmail.com';
+  private readonly smtpPort = 465;
   private readonly gmailEmail: string;
   private readonly gmailAppPassword: string;
   private readonly fromName: string;
+  private readonly forceIpv4: boolean;
   private readonly transporter: nodemailer.Transporter;
 
   constructor() {
     this.gmailEmail = process.env.GMAIL_EMAIL as string;
     this.gmailAppPassword = process.env.GMAIL_APP_PASSWORD as string;
     this.fromName = process.env.GMAIL_FROM_NAME || 'Notification';
+    this.forceIpv4 = process.env.GMAIL_SMTP_FORCE_IPV4 !== 'false';
 
     this.validateConfiguration();
 
     // Create Nodemailer transporter for Gmail
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: this.smtpHost,
+      port: this.smtpPort,
+      secure: true,
       auth: {
         user: this.gmailEmail,
         pass: this.gmailAppPassword,
       },
+      connectionTimeout: 30_000,
+      greetingTimeout: 30_000,
+      socketTimeout: 60_000,
+      tls: {
+        servername: this.smtpHost,
+      },
+      getSocket: this.forceIpv4 ? this.createIpv4Socket.bind(this) : undefined,
     });
   }
 
@@ -59,6 +76,7 @@ export class GmailEmailProvider implements IEmailProvider {
     this.logger.log(`GMAIL_EMAIL: ${this.gmailEmail ? 'Configured' : 'Not Set'}`);
     this.logger.log(`GMAIL_APP_PASSWORD: ${this.gmailAppPassword ? 'Configured' : 'Not Set'}`);
     this.logger.log(`GMAIL_FROM_NAME: ${this.fromName}`);
+    this.logger.log(`GMAIL_SMTP_FORCE_IPV4: ${this.forceIpv4}`);
 
     if (!this.gmailEmail) {
       throw new InternalServerErrorException(
@@ -71,6 +89,73 @@ export class GmailEmailProvider implements IEmailProvider {
         'GMAIL_APP_PASSWORD is not configured. Please generate an app password at https://myaccount.google.com/apppasswords and set it in the environment variables.',
       );
     }
+  }
+
+  /**
+   * Gmail can resolve to IPv6 addresses even on hosts without IPv6 egress.
+   * Resolve and connect through an IPv4 address so SMTP does not fail with ENETUNREACH.
+   */
+  private createIpv4Socket(
+    options: SMTPTransport.Options,
+    callback: (
+      err: Error | null,
+      socketOptions?: { connection: tls.TLSSocket; secured: true },
+    ) => void,
+  ): void {
+    const host = options.host || this.smtpHost;
+    const port = Number(options.port || this.smtpPort);
+
+    dns.resolve4(host, (dnsError, addresses) => {
+      if (dnsError) {
+        callback(dnsError);
+        return;
+      }
+
+      const address = addresses[0];
+      if (!address) {
+        callback(new Error(`No IPv4 SMTP address resolved for ${host}`));
+        return;
+      }
+
+      let settled = false;
+      const connection = tls.connect({
+        host: address,
+        port,
+        servername: host,
+        rejectUnauthorized: true,
+      });
+
+      const finish = (
+        error: Error | null,
+        socketOptions?: { connection: tls.TLSSocket; secured: true },
+      ): void => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        connection.removeListener('secureConnect', onSecureConnect);
+        connection.removeListener('error', onError);
+
+        if (error) {
+          connection.destroy();
+        }
+
+        callback(error, socketOptions);
+      };
+
+      const onSecureConnect = (): void => {
+        connection.setKeepAlive(true);
+        finish(null, { connection, secured: true });
+      };
+
+      const onError = (error: Error): void => {
+        finish(error);
+      };
+
+      connection.once('secureConnect', onSecureConnect);
+      connection.once('error', onError);
+    });
   }
 
   /**
