@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.ts": {
-      "maxDuration": 890,
+      "maxDuration": 300,
       "includeFiles": "data/**"
     }
   },
