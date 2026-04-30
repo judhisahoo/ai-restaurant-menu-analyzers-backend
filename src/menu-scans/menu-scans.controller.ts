@@ -17,6 +17,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MenuScansService } from './menu-scans.service';
 import { MenuAnalysisResponseDto } from './dto/dish-analysis.dto';
+import { PersistMenuScanDishesDto } from './dto/persist-menu-scan-dishes.dto';
 
 @ApiTags('Menu Scans')
 @Controller('menu-scans')
@@ -61,5 +62,17 @@ export class MenuScansController {
     }
 
     return this.menuScansService.create(userId, file);
+  }
+
+  @Post('persist-dishes')
+  @ApiOperation({
+    summary:
+      'Persist processed dish data after menu scan AI processing has returned to the client.',
+  })
+  @ApiCreatedResponse({
+    description: 'Returns the number of dishes persisted for the user.',
+  })
+  persistDishes(@Body() body: PersistMenuScanDishesDto) {
+    return this.menuScansService.persistDishes(body.user_id, body.dishes);
   }
 }

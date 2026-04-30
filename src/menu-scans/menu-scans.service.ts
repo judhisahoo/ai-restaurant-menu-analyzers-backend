@@ -10,6 +10,7 @@ import {
   type MenuScanProcessingMode,
 } from '../common/ai/ai.service';
 import { DishDto } from './dto/dish-analysis.dto';
+import { PersistDishDto } from './dto/persist-menu-scan-dishes.dto';
 
 type FakeDishRow = {
   dish_name?: unknown;
@@ -101,20 +102,32 @@ export class MenuScansService {
     const dishesWithImages =
       await this.get_dish_image_by_dish_name(extractedDishes);
 
-    setImmediate(() => {
-      void this.persistProcessedDishes(userId, dishesWithImages).catch(
-        (error: unknown) => {
-          const message =
-            error instanceof Error ? error.stack ?? error.message : String(error);
-          this.logger.error(
-            'Background dish persistence failed after menu scan processing.',
-            message,
-          );
-        },
-      );
-    });
-
     return dishesWithImages;
+  }
+
+  async persistDishes(
+    userId: number,
+    dishes: PersistDishDto[],
+  ): Promise<{ message: string; persisted_count: number }> {
+    await this.userService.ensureUserExists(userId);
+
+    const normalizedDishes = this.normalizeDishData(
+      dishes.map((dish) => ({
+        name: dish.name,
+        short_description: dish.short_description,
+        image: dish.image ?? null,
+      })),
+    );
+
+    const persistedCount = await this.persistProcessedDishes(
+      userId,
+      normalizedDishes,
+    );
+
+    return {
+      message: 'Processed dishes persisted successfully.',
+      persisted_count: persistedCount,
+    };
   }
 
   private async getDishDataForProcessingMode(
@@ -181,70 +194,71 @@ export class MenuScansService {
   private async persistProcessedDishes(
     userId: number,
     dishes: DishDto[],
-  ): Promise<void> {
+  ): Promise<number> {
+    let persistedCount = 0;
+
     for (const dish of dishes) {
       try {
-        await this.prismaService.$transaction(async (tx) => {
-          const existingItem = await tx.menuItem.findFirst({
-            where: {
-              name: {
-                equals: dish.name,
-                mode: 'insensitive',
-              },
+        const existingItem = await this.prismaService.menuItem.findFirst({
+          where: {
+            name: {
+              equals: dish.name,
+              mode: 'insensitive',
             },
-            select: {
-              id: true,
-              image: true,
-            },
-          });
+          },
+          select: {
+            id: true,
+            image: true,
+          },
+        });
 
-          const itemId = existingItem?.id ?? generateId();
-
-          if (existingItem) {
-            await tx.menuItem.update({
-              where: { id: itemId },
+        const menuItem = existingItem
+          ? await this.prismaService.menuItem.update({
+              where: { id: existingItem.id },
               data: {
                 shortDescription: dish.short_description,
                 image: existingItem.image ?? dish.image ?? null,
               },
-            });
-          } else {
-            await tx.menuItem.create({
+              select: {
+                id: true,
+              },
+            })
+          : await this.prismaService.menuItem.create({
               data: {
-                id: itemId,
+                id: generateId(),
                 name: dish.name,
                 shortDescription: dish.short_description,
                 image: dish.image ?? null,
               },
-            });
-          }
-
-          const existingUserLink = await tx.userMenuItem.findFirst({
-            where: {
-              itemId,
-              userId,
-            },
-            select: {
-              id: true,
-            },
-          });
-
-          if (!existingUserLink) {
-            await tx.userMenuItem.create({
-              data: {
-                id: generateId(),
-                itemId,
-                userId,
+              select: {
+                id: true,
               },
             });
-          }
+
+        await this.prismaService.userMenuItem.upsert({
+          where: {
+            itemId_userId: {
+              itemId: menuItem.id,
+              userId,
+            },
+          },
+          update: {},
+          create: {
+            id: generateId(),
+            itemId: menuItem.id,
+            userId,
+          },
         });
+
+        persistedCount += 1;
       } catch (error) {
         this.logger.error(
-          `Failed to persist dish "${dish.name}" in background`,
+          `Failed to persist dish "${dish.name}"`,
           error instanceof Error ? error.stack : String(error),
         );
       }
     }
+
+    return persistedCount;
   }
 }
