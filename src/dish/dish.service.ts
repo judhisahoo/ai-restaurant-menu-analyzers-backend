@@ -205,11 +205,7 @@ export class DishService {
         item.normalizedName,
       );
 
-      this.saveGeneratedItemComponentsInBackground(
-        item.id,
-        item.normalizedName,
-        componentReport,
-      );
+      await this.createGeneratedItemComponents(item.id, componentReport);
 
       return {
         message: 'Item components generated successfully.',
@@ -796,122 +792,115 @@ export class DishService {
     itemId: string,
     componentReport: ItemComponentReportDto[],
   ): Promise<void> {
-    await this.prismaService.$transaction(async (tx: TransactionClient) => {
-      let currentOrder = await this.getNextOrderValue(
-        tx,
-        'item_components',
-        itemId,
-      );
+    const existingComponents = await this.prismaService.itemComponent.findMany({
+      where: { itemId },
+      select: {
+        name: true,
+        rowOrder: true,
+      },
+    });
 
-      for (const component of componentReport) {
-        const existingComponent = await tx.itemComponent.findFirst({
-          where: {
-            itemId,
-            name: {
-              equals: component.name,
-              mode: 'insensitive',
-            },
-          },
-          select: {
-            id: true,
-          },
-        });
+    const existingNames = new Set(
+      existingComponents.map((component) => component.name.toLowerCase()),
+    );
+    const newNames = new Set<string>();
+    let currentOrder = existingComponents.reduce(
+      (maxOrder, component) => Math.max(maxOrder, component.rowOrder),
+      0,
+    );
+    const now = new Date();
 
-        if (existingComponent) {
-          continue;
+    const componentsToCreate = componentReport
+      .filter((component) => {
+        const nameKey = component.name.trim().toLowerCase();
+
+        if (!nameKey || existingNames.has(nameKey) || newNames.has(nameKey)) {
+          return false;
         }
 
+        newNames.add(nameKey);
+        return true;
+      })
+      .map((component) => {
         currentOrder += 1;
-        const now = new Date();
-        await tx.itemComponent.create({
-          data: {
-            id: generateId(),
-            itemId,
-            name: component.name,
-            summary: component.detail,
-            rowOrder: currentOrder,
-            createdAt: now,
-            updatedAt: now,
-          },
-        });
-      }
-    });
-  }
 
-  private saveGeneratedItemComponentsInBackground(
-    itemId: string,
-    itemName: string,
-    componentReport: ItemComponentReportDto[],
-  ): void {
-    void this.createGeneratedItemComponents(itemId, componentReport).catch(
-      (error) => {
-        console.error(
-          `Failed to save AI-generated item components for "${itemName}".`,
-          error,
-        );
-      },
-    );
+        return {
+          id: generateId(),
+          itemId,
+          name: component.name,
+          summary: component.detail,
+          rowOrder: currentOrder,
+          createdAt: now,
+          updatedAt: now,
+        };
+      });
+
+    if (componentsToCreate.length === 0) {
+      return;
+    }
+
+    await this.prismaService.itemComponent.createMany({
+      data: componentsToCreate,
+      skipDuplicates: true,
+    });
   }
 
   private async createGeneratedItemIngredients(
     itemId: string,
     ingredientReport: ItemIngredientReportDto[],
   ): Promise<void> {
-    await this.prismaService.$transaction(async (tx: TransactionClient) => {
-      let currentOrder = await this.getNextOrderValue(
-        tx,
-        'ingredient_details',
-        itemId,
-      );
+    const existingIngredients =
+      await this.prismaService.ingredientDetail.findMany({
+        where: { itemId },
+        select: {
+          name: true,
+          rowOrder: true,
+        },
+      });
 
-      for (const ingredient of ingredientReport) {
-        const existingIngredient = await tx.ingredientDetail.findFirst({
-          where: {
-            itemId,
-            name: {
-              equals: ingredient.name,
-              mode: 'insensitive',
-            },
-          },
-          select: {
-            id: true,
-          },
-        });
+    const existingNames = new Set(
+      existingIngredients.map((ingredient) => ingredient.name.toLowerCase()),
+    );
+    const newNames = new Set<string>();
+    let currentOrder = existingIngredients.reduce(
+      (maxOrder, ingredient) => Math.max(maxOrder, ingredient.rowOrder),
+      0,
+    );
+    const now = new Date();
 
-        if (existingIngredient) {
-          continue;
+    const ingredientsToCreate = ingredientReport
+      .filter((ingredient) => {
+        const nameKey = ingredient.name.trim().toLowerCase();
+
+        if (!nameKey || existingNames.has(nameKey) || newNames.has(nameKey)) {
+          return false;
         }
 
+        newNames.add(nameKey);
+        return true;
+      })
+      .map((ingredient) => {
         currentOrder += 1;
-        const now = new Date();
-        await tx.ingredientDetail.create({
-          data: {
-            id: generateId(),
-            itemId,
-            name: ingredient.name,
-            detail: ingredient.detail,
-            rowOrder: currentOrder,
-            createdAt: now,
-            updatedAt: now,
-          },
-        });
-      }
-    });
-  }
 
-  private saveGeneratedItemIngredientsInBackground(
-    itemId: string,
-    itemName: string,
-    ingredientReport: ItemIngredientReportDto[],
-  ): void {
-    void this.createGeneratedItemIngredients(itemId, ingredientReport).catch(
-      (error) => {
-        console.error(
-          `Failed to save AI-generated ingredient details for "${itemName}".`,
-          error,
-        );
-      },
-    );
+        return {
+          id: generateId(),
+          itemId,
+          name: ingredient.name,
+          detail: ingredient.detail,
+          rowOrder: currentOrder,
+          createdAt: now,
+          updatedAt: now,
+        };
+      });
+
+    if (ingredientsToCreate.length === 0) {
+      return;
+    }
+
+    await this.prismaService.ingredientDetail.createMany({
+      data: ingredientsToCreate,
+      skipDuplicates: true,
+    });
   }
 
   private formatItemComponents(
