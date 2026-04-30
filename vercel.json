@@ -1,17 +1,19 @@
 {
   "version": 2,
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 60,
+      "includeFiles": "data/**"
+    }
+  },
   "routes": [
     {
-      "src": "/api/docs/?$",
-      "dest": "/api/docs"
+      "src": "/api/(.*)",
+      "dest": "/api/index.ts"
     },
     {
-      "src": "/api/docs/swagger-ui-init.js",
-      "dest": "/api/docs/swagger-ui-init.js"
-    },
-    {
-      "src": "/api/docs-json",
-      "dest": "/api/docs-json"
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
     }
   ]
 }
