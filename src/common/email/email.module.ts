@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { MailgunEmailProvider } from './providers/mailgun-email.provider';
 import { ResendEmailProvider } from './providers/resend-email.provider';
@@ -14,7 +14,7 @@ import { IEmailProvider } from './interfaces/email-provider.interface';
  * To add a new provider:
  * 1. Create a new provider class implementing IEmailProvider
  * 2. Add it to the providers array
- * 3. Update the useClass in the inject section
+ * 3. Add it to createEmailProvider()
  * 
  * Current Providers:
  *   - MailgunEmailProvider (MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_FROM_EMAIL)
@@ -24,36 +24,46 @@ import { IEmailProvider } from './interfaces/email-provider.interface';
  *   - ZohoEmailProvider (SMTP: ZOHO_SMTP_HOST, ZOHO_SMTP_PORT, ZOHO_SMTP_USER, ZOHO_SMTP_PASS, ZOHO_FROM_EMAIL)
  *   - GmailEmailProvider (GMAIL_EMAIL, GMAIL_APP_PASSWORD, GMAIL_FROM_NAME - optional)
  * 
- * Example to switch providers:
- *   useClass: ResendEmailProvider
- *   useClass: MailjetEmailProvider
- *   useClass: MailerSendEmailProvider
- *   useClass: ZohoEmailProvider
- *   useClass: GmailEmailProvider
+ * Set EMAIL_PROVIDER to switch providers:
+ *   gmail (default), resend, mailgun, mailjet, mailersend, zoho
  * 
  * Example to add SendGrid:
  *   1. Create SendgridEmailProvider in providers/
- *   2. Add to providers array
- *   3. useClass: SendgridEmailProvider
+ *   2. Add it to createEmailProvider()
  */
+const emailModuleLogger = new Logger('EmailModule');
+
+function createEmailProvider(): IEmailProvider {
+  const provider = (process.env.EMAIL_PROVIDER || 'gmail').trim().toLowerCase();
+
+  emailModuleLogger.log(`Using ${provider} email provider`);
+
+  switch (provider) {
+    case 'gmail':
+      return new GmailEmailProvider();
+    case 'resend':
+      return new ResendEmailProvider();
+    case 'mailgun':
+      return new MailgunEmailProvider();
+    case 'mailjet':
+      return new MailjetEmailProvider();
+    case 'mailersend':
+      return new MailerSendEmailProvider();
+    case 'zoho':
+      return new ZohoEmailProvider();
+    default:
+      throw new Error(
+        `Unsupported EMAIL_PROVIDER "${provider}". Use gmail, resend, mailgun, mailjet, mailersend, or zoho.`,
+      );
+  }
+}
+
 @Module({
   providers: [
-    //MailgunEmailProvider,
-    //ResendEmailProvider,
-    //MailjetEmailProvider,
-    //MailerSendEmailProvider,
-    //ZohoEmailProvider,
-    GmailEmailProvider,
     EmailService,
     {
       provide: 'IEmailProvider',
-      //useClass: MailgunEmailProvider,
-      // To switch providers, change useClass to:
-      // useClass: ResendEmailProvider,
-      // useClass: MailjetEmailProvider,
-      // useClass: MailerSendEmailProvider,
-      //useClass: ZohoEmailProvider,
-      useClass: GmailEmailProvider,
+      useFactory: createEmailProvider,
     },
     {
       provide: EmailService,
