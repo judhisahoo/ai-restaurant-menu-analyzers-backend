@@ -56,9 +56,10 @@ export class MenuScansService {
     console.log(' now calling process_ai_for_dis_data() to analyze menu scan image and prepare dish data for response and background persistence.');
 
     const dishes = await this.process_ai_for_dis_data(userId, storedPhoto);
+    const persistedCount = await this.persistProcessedDishes(userId, dishes);
 
     return {
-      message: 'Menu scan saved and dish data prepared successfully.',
+      message: 'Menu scan saved and dish data persisted successfully.',
       data: {
         menu_scan: {
           id: menuScan.id,
@@ -66,6 +67,7 @@ export class MenuScansService {
           scan_photo: storedPhoto,
           captured_at: menuScan.capturedAt.toISOString(),
         },
+        persisted_count: persistedCount,
         dishes,
       },
     };
